@@ -1,0 +1,5 @@
+node_modules
+dist
+dev-dist
+shots
+e2e-failure.png

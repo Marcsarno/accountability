@@ -1,0 +1,140 @@
+/* Daymark design tokens. "Paper and signal": warm paper, ink, one amber signal colour.
+   Outcomes use calm, distinct hues plus shape/pattern — never red for a miss. */
+:root {
+  color-scheme: light dark;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  --font-round: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+
+  /* Type scale: iOS text styles authored on a 17px root (1rem = Body), so the
+     iOS Dynamic Type root (-apple-system-body) scales every token proportionally. */
+  --t-large: 2rem;        /* 34 */
+  --t-title1: 1.647rem;   /* 28 */
+  --t-title2: 1.294rem;   /* 22 */
+  --t-title3: 1.176rem;   /* 20 */
+  --t-body: 1rem;         /* 17 */
+  --t-callout: 0.941rem;  /* 16 */
+  --t-sub: 0.882rem;      /* 15 */
+  --t-foot: 0.765rem;     /* 13 */
+  --t-cap: 0.706rem;      /* 12 */
+  --t-tab: 0.647rem;      /* 11 */
+
+  /* Spacing: 4pt base, 8pt rhythm */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s8: 32px; --s10: 40px;
+  --gutter: 16px;
+
+  /* Radii — concentric: inner = outer − padding */
+  --r-card: 22px; --r-inner: 14px; --r-ctl: 12px; --r-pill: 999px;
+
+  --tap: 44px;
+
+  /* Motion */
+  --dur-1: 150ms; --dur-2: 250ms; --dur-3: 400ms;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-sheet: cubic-bezier(.32, .72, 0, 1); /* iOS-like, no overshoot */
+  --spring: linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1);
+
+  /* Colour — light */
+  --bg: oklch(97.6% 0.006 80);
+  --bg-grouped: oklch(95.2% 0.008 80);
+  --surface: oklch(99.4% 0.003 80);
+  --surface-2: oklch(96.4% 0.007 80);
+  --ink: oklch(23% 0.025 255);
+  --ink-2: oklch(42% 0.02 255);
+  --ink-3: oklch(50% 0.015 255);
+  --line: oklch(88% 0.01 255);
+  --line-strong: oklch(62% 0.015 255);
+  --field-line: oklch(64% 0.015 255);
+
+  --signal: oklch(70% 0.17 52);
+  --signal-ink: oklch(50% 0.15 45);
+  --focus: oklch(50% 0.15 45);
+  --signal-soft: oklch(93% 0.05 70);
+  --on-signal: oklch(21% 0.04 45);
+
+  --done: oklch(57% 0.11 182);
+  --done-soft: oklch(93% 0.035 182);
+  --done-ink: oklch(42% 0.09 182);
+  --partial: oklch(66% 0.14 72);
+  --partial-soft: oklch(94% 0.05 88);
+  --missed: oklch(58% 0.025 255);
+  --missed-soft: oklch(92% 0.008 255);
+  --skipped: oklch(52% 0.07 300);
+  --skipped-soft: oklch(93% 0.02 300);
+
+  --warn: oklch(52% 0.16 40);
+  --warn-soft: oklch(94% 0.04 50);
+  --info: oklch(52% 0.12 250);
+  --info-soft: oklch(94% 0.025 250);
+  --sim: oklch(52% 0.15 300);
+  --sim-soft: oklch(94% 0.03 300);
+
+  --shadow-1: 0 1px 2px oklch(20% 0.03 255 / .06), 0 1px 1px oklch(20% 0.03 255 / .04);
+  --shadow-2: 0 10px 30px -12px oklch(20% 0.03 255 / .28);
+  --glass: oklch(99% 0.004 80 / .72);
+  --glass-rim: inset 0 1px 0 oklch(100% 0 0 / .65), 0 0 0 .5px oklch(20% 0.03 255 / .16);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(17% 0.02 260);
+    --bg-grouped: oklch(14.5% 0.018 260);
+    --surface: oklch(21.5% 0.022 260);
+    --surface-2: oklch(25.5% 0.022 260);
+    --ink: oklch(95% 0.008 80);
+    --ink-2: oklch(80% 0.012 255);
+    --ink-3: oklch(66% 0.015 255);
+    --line: oklch(30% 0.02 260);
+    --line-strong: oklch(58% 0.02 260); --field-line: oklch(56% 0.02 260); --done-ink: oklch(80% 0.1 182); --focus: oklch(80% 0.13 65);
+    --signal: oklch(76% 0.15 60);
+    --signal-ink: oklch(82% 0.13 65);
+    --signal-soft: oklch(32% 0.06 55);
+    --on-signal: oklch(20% 0.04 50);
+    --done: oklch(74% 0.11 182);
+    --done-soft: oklch(31% 0.05 182);
+    --partial: oklch(82% 0.13 85);
+    --partial-soft: oklch(33% 0.06 85);
+    --missed: oklch(70% 0.02 255);
+    --missed-soft: oklch(30% 0.012 255);
+    --skipped: oklch(74% 0.05 300);
+    --skipped-soft: oklch(31% 0.03 300);
+    --warn: oklch(76% 0.14 50);
+    --warn-soft: oklch(31% 0.06 45);
+    --info: oklch(76% 0.1 250);
+    --info-soft: oklch(30% 0.05 250);
+    --sim: oklch(78% 0.11 300);
+    --sim-soft: oklch(30% 0.06 300);
+    --shadow-1: 0 0 0 .5px oklch(100% 0 0 / .06);
+    --shadow-2: 0 14px 34px -14px oklch(0% 0 0 / .7);
+    --glass: oklch(24% 0.022 260 / .72);
+    --glass-rim: inset 0 1px 0 oklch(100% 0 0 / .1), 0 0 0 .5px oklch(0% 0 0 / .5);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(17% 0.02 260); --bg-grouped: oklch(14.5% 0.018 260); --surface: oklch(21.5% 0.022 260); --surface-2: oklch(25.5% 0.022 260);
+  --ink: oklch(95% 0.008 80); --ink-2: oklch(80% 0.012 255); --ink-3: oklch(66% 0.015 255); --line: oklch(30% 0.02 260); --line-strong: oklch(58% 0.02 260); --field-line: oklch(56% 0.02 260); --done-ink: oklch(80% 0.1 182); --focus: oklch(80% 0.13 65);
+  --signal: oklch(76% 0.15 60); --signal-ink: oklch(82% 0.13 65); --signal-soft: oklch(32% 0.06 55); --on-signal: oklch(20% 0.04 50);
+  --done: oklch(74% 0.11 182); --done-soft: oklch(31% 0.05 182); --partial: oklch(82% 0.13 85); --partial-soft: oklch(33% 0.06 85);
+  --missed: oklch(70% 0.02 255); --missed-soft: oklch(30% 0.012 255); --skipped: oklch(74% 0.05 300); --skipped-soft: oklch(31% 0.03 300);
+  --warn: oklch(76% 0.14 50); --warn-soft: oklch(31% 0.06 45); --info: oklch(76% 0.1 250); --info-soft: oklch(30% 0.05 250);
+  --sim: oklch(78% 0.11 300); --sim-soft: oklch(30% 0.06 300);
+  --shadow-1: 0 0 0 .5px oklch(100% 0 0 / .06); --shadow-2: 0 14px 34px -14px oklch(0% 0 0 / .7);
+  --glass: oklch(24% 0.022 260 / .72); --glass-rim: inset 0 1px 0 oklch(100% 0 0 / .1), 0 0 0 .5px oklch(0% 0 0 / .5);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Increased contrast: match the theme selectors' specificity so dark mode is covered too. */
+@media (prefers-contrast: more) {
+  :root:not([data-theme="light"]), :root:is([data-theme="light"], [data-theme="dark"]) {
+    --ink-3: var(--ink-2); --line: var(--line-strong); --glass: var(--surface);
+  }
+}
+
+html { font-size: 106.25%; } /* 17px root elsewhere */
+/* Dynamic Type on iOS: the system Body size becomes the root (applies on reload). */
+@supports (-webkit-touch-callout: none) {
+  html { font: -apple-system-body; font-family: var(--font-sans); }
+}
