@@ -21,7 +21,8 @@ npm run dev         # local dev server
 ## Where things stand (2026-10-27)
 - GitHub: **Marcsarno/accountability** (supersedes the earlier HornerXpress/accountability-tracker plan).
 - Vercel: project **accountability** in the **marcsarno** team, linked to that repo. Every push deploys;
-  the production branch gets the stable URL https://accountability-lilac.vercel.app (install the PWA
+  the production branch is `main`. Work happens on branches and reaches production by merging into
+  `main`. Production gets the stable URL https://accountability-lilac.vercel.app (install the PWA
   from that one — installs and push are tied to the origin). Other branches get preview URLs, which
   sit behind Vercel sign-in (team deployment protection); the production domain above is public.
 - `vercel.json` sets `Cache-Control: no-cache` on `/sw.js`, `/index.html`, `/manifest.webmanifest` so the
