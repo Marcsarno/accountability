@@ -5,7 +5,7 @@ import { emptyState } from '../domain/initial'
 import { generateOccurrences } from '../domain/recurrence'
 import { Temporal, addDays, todayIn } from '../domain/time'
 import type { AppState } from '../domain/types'
-import { clearState, loadState, saveState } from './persist'
+import { loadState, saveState } from './persist'
 
 export const OWNER_ID = 'owner-1'
 
@@ -50,42 +50,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(t)
   }, [])
 
-  useEffect(() => {
-    if (!ready) return
-    saveState(state)
+  /**
+   * The single way state changes after load: update the screen and start the device write in
+   * the same step, so a result confirmed on screen is already on its way to storage.
+   */
+  const commit = useCallback((next: AppState) => {
+    stateRef.current = next
+    setState(next)
+    saveState(next)
       .then(() => setStorageError(null))
       .catch((e) => setStorageError(`Not saved on this device: ${e?.name === 'QuotaExceededError' ? 'storage is full' : e?.message ?? e}. Your changes are still on screen — export before closing.`))
-  }, [state, ready])
+  }, [])
 
   const now = useMemo(() => state.sim.now ?? Temporal.Now.instant().toString(), [state.sim.now, tick])
   const today = useMemo(() => todayIn(state.owner.zone, Temporal.Instant.from(now)), [now, state.owner.zone])
 
-  useEffect(() => { if (ready) setState((s) => withOccurrences(s, today)) }, [today, ready])
+  useEffect(() => {
+    if (!ready) return
+    const next = withOccurrences(stateRef.current, today)
+    if (next !== stateRef.current) commit(next)
+  }, [today, ready, commit])
 
   const run = useCallback((cmd: Command, key = newId()) => {
     const r = apply(stateRef.current, key, cmd, { now: stateRef.current.sim.now ?? Temporal.Now.instant().toString(), id: newId })
-    if (r.ok && !r.replayed) {
-      const next = withOccurrences(r.state, todayIn(r.state.owner.zone, Temporal.Instant.from(r.state.sim.now ?? Temporal.Now.instant().toString())))
-      stateRef.current = next
-      setState(next)
-    }
+    if (r.ok && !r.replayed) commit(withOccurrences(r.state, todayIn(r.state.owner.zone, Temporal.Instant.from(r.state.sim.now ?? Temporal.Now.instant().toString()))))
     return r
-  }, [])
+  }, [commit])
 
   const setSim = useCallback((patch: Partial<AppState['sim']>) => {
-    setState((s) => {
-      const next = { ...s, sim: { ...s.sim, ...patch } }
-      // Coming back online "syncs" queued commands in the simulation.
-      if (patch.online && !s.sim.online) next.commands = s.commands.map((c) => (c.sync === 'queued' ? { ...c, sync: 'synced' } : c))
-      return next
-    })
-  }, [])
+    const s = stateRef.current
+    const next = { ...s, sim: { ...s.sim, ...patch } }
+    // Coming back online "syncs" queued commands in the simulation.
+    if (patch.online && !s.sim.online) next.commands = s.commands.map((c) => (c.sync === 'queued' ? { ...c, sync: 'synced' as const } : c))
+    commit(next)
+  }, [commit])
 
-  const loadSample = useCallback(() => setState(buildSampleState()), [])
-  const resetEmpty = useCallback(() => {
-    clearState(OWNER_ID).catch(() => {})
-    setState(emptyState(browserZone()))
-  }, [])
+  const loadSample = useCallback(() => commit(buildSampleState()), [commit])
+  // Writing the empty state replaces the stored copy, so no separate clear is needed.
+  const resetEmpty = useCallback(() => commit(emptyState(browserZone())), [commit])
   const syncNow = useCallback(() => setSim({ online: true }), [setSim])
 
   const value = useMemo(() => ({ state, ready, storageError, now, today, run, setSim, loadSample, resetEmpty, syncNow }), [state, ready, storageError, now, today, run, setSim, loadSample, resetEmpty, syncNow])

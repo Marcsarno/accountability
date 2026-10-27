@@ -1,9 +1,10 @@
 import { Check, Minus, Question, X, ArrowBendDownRight, Flask, Info, Warning } from '@phosphor-icons/react'
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { summarizeCapacity, type CapacityEntry } from '../domain/capacity'
+import { suggestedBy } from '../domain/commands'
 import { Temporal } from '../domain/time'
-import type { Outcome } from '../domain/types'
+import type { AppState, Outcome, UnitId } from '../domain/types'
 
 export const OUTCOME_LABEL: Record<Outcome | 'unreported', string> = {
   completed: 'Completed', partial: 'Partial', missed: 'Missed', skipped: 'Skipped', unreported: 'Not reported',
@@ -25,6 +26,20 @@ export const shortDay = (date: string) => fmtDate(date, { weekday: 'short' })
 export function fmtInstant(iso: string, zone: string, opts: Intl.DateTimeFormatOptions = { weekday: 'short', hour: 'numeric', minute: '2-digit' }) {
   return Temporal.Instant.from(iso).toZonedDateTimeISO(zone).toLocaleString(undefined, opts)
 }
+/** Short label for where an action came from, or null for one captured directly. */
+export function originLabel(state: AppState, unitId: UnitId): string | null {
+  const o = state.actions[unitId]?.origin
+  if (!o) return null
+  return o.kind === 'suggestion'
+    ? `Suggested by ${suggestedBy(state, o.feedbackId) ?? 'your partner'}`
+    : `Next step from ${shortDay(o.checkInDate)}`
+}
+
+/** Shallow equality for flat form-value objects (used to tell whether a sheet has unsaved edits). */
+export function sameValues<T extends object>(a: T, b: T): boolean {
+  return (Object.keys(a) as (keyof T)[]).every((k) => Object.is(a[k], b[k]))
+}
+
 export const mins = (m: number | null | undefined) => (m == null ? 'No estimate' : m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`)
 
 export function CapacityBar({ available, entries }: { available: number; entries: CapacityEntry[] }) {
@@ -48,13 +63,41 @@ export function CapacityBar({ available, entries }: { available: number; entries
   )
 }
 
-export function Sheet({ title, onClose, children, leading, trailing }: { title: string; onClose: () => void; children: ReactNode; leading?: ReactNode; trailing?: ReactNode }) {
+/** Keeps a ref pointing at the latest value, so long-lived listeners never call a stale callback. */
+function useLatest<T>(value: T) {
+  const ref = useRef(value)
+  useLayoutEffect(() => { ref.current = value })
+  return ref
+}
+
+interface SheetProps {
+  title: string
+  onClose: () => void
+  children: ReactNode
+  /** The sheet's main action, pinned below the scrolling content. */
+  footer?: ReactNode
+  /** When true, closing asks before discarding the edits. */
+  dirty?: boolean
+}
+
+export function Sheet({ title, onClose, children, footer, dirty = false }: SheetProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const keepRef = useRef<HTMLButtonElement>(null)
+  const [confirming, setConfirming] = useState(false)
+  const requestClose = () => { if (dirty) setConfirming(true); else onClose() }
+  const latest = useLatest({ requestClose, confirming })
+
+  // Runs once per opening. Callbacks are read through `latest`, so parent re-renders
+  // (a new onClose each time) never re-run this and never move focus while the user types.
   useEffect(() => {
     const prev = document.activeElement as HTMLElement | null
     // Focus the dialog, not an input: iOS ignores programmatic focus outside a gesture.
     ref.current?.focus()
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (latest.current.confirming) setConfirming(false)
+      else latest.current.requestClose()
+    }
     // Keep sheet actions above the iOS keyboard (no VirtualKeyboard API on iOS).
     const vv = window.visualViewport
     const onVV = () => { if (vv) document.documentElement.style.setProperty('--vvh', `${vv.height}px`) }
@@ -70,18 +113,29 @@ export function Sheet({ title, onClose, children, leading, trailing }: { title: 
       if (shell) shell.inert = false
       document.body.style.overflow = ''; prev?.focus?.()
     }
-  }, [onClose])
+  }, [latest])
+  useEffect(() => { if (confirming) keepRef.current?.focus() }, [confirming])
+
   return createPortal(
     <>
-      <div className="sheet-backdrop" onClick={onClose} />
+      <div className="sheet-backdrop" onClick={requestClose} />
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} ref={ref} tabIndex={-1}>
         <div className="grabber" />
         <header>
-          <div style={{ minWidth: 72 }}>{leading ?? <button className="btn quiet" onClick={onClose}>Close</button>}</div>
+          <button className="btn quiet" onClick={requestClose}>Close</button>
           <h2>{title}</h2>
-          <div style={{ minWidth: 72, display: 'flex', justifyContent: 'flex-end' }}>{trailing}</div>
+          <span className="sheet-header-balance" aria-hidden="true" />
         </header>
         <div className="body">{children}</div>
+        {confirming ? (
+          <div className="sheet-footer confirm" role="alertdialog" aria-label="Discard changes?">
+            <p>Discard your changes?</p>
+            <div className="btn-row">
+              <button ref={keepRef} className="btn" onClick={() => setConfirming(false)}>Keep editing</button>
+              <button className="btn danger" onClick={onClose}>Discard</button>
+            </div>
+          </div>
+        ) : footer && <div className="sheet-footer">{footer}</div>}
       </div>
     </>,
     document.body,

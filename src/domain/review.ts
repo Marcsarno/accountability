@@ -1,7 +1,7 @@
 import { currentEvent, latestCheckIn } from './commands'
 import { inAbsence, resolveUnit } from './recurrence'
-import { addDays, type LocalDate } from './time'
-import type { AppState, Outcome, UnitId } from './types'
+import { addDays, compareDates, type LocalDate } from './time'
+import type { AppState, CheckInRevision, Experiment, Outcome, UnitId } from './types'
 
 export type OutcomeOrUnknown = Outcome | 'unreported'
 export const OUTCOMES: OutcomeOrUnknown[] = ['completed', 'partial', 'missed', 'skipped', 'unreported']
@@ -81,5 +81,43 @@ export function summarizeWeek(state: AppState, end: LocalDate): WeekSummary {
     originalItems: days.reduce((s, d) => s + d.originalCount, 0),
     currentItems: days.reduce((s, d) => s + d.currentCount, 0),
     movedOrRemoved: days.reduce((s, d) => s + d.leftOriginal.length, 0),
+  }
+}
+
+/** An experiment runs for the seven days starting on the day it was chosen. */
+export const EXPERIMENT_DAYS = 7
+/** A next step older than this is history, not a suggestion for today. */
+export const NEXT_STEP_LOOKBACK_DAYS = 7
+
+/** The experiment in force on `date`: the latest one chosen within the last seven days. */
+export function currentExperiment(state: AppState, date: LocalDate): Experiment | null {
+  return state.experiments.filter((e) =>
+    compareDates(e.weekEnd, date) <= 0 && compareDates(date, addDays(e.weekEnd, EXPERIMENT_DAYS)) < 0,
+  ).at(-1) ?? null
+}
+
+export interface CarryForward {
+  /** The next step from the most recent earlier check-in, unless it has already been planned. */
+  nextStep: { fromDate: LocalDate; text: string } | null
+  experiment: Experiment | null
+}
+
+/**
+ * What the last check-in and review hand to a day being planned. Nothing here is committed
+ * automatically: the owner chooses whether to plan it.
+ */
+export function carryForward(state: AppState, date: LocalDate): CarryForward {
+  const earliest = addDays(date, -NEXT_STEP_LOOKBACK_DAYS)
+  let latest: CheckInRevision | null = null
+  // Revisions are stored in submission order, so a later revision of the same day wins.
+  for (const c of state.checkIns) {
+    if (compareDates(c.date, date) >= 0 || compareDates(c.date, earliest) < 0) continue
+    if (!latest || compareDates(c.date, latest.date) >= 0) latest = c
+  }
+  const text = latest?.nextStep.trim()
+  const planned = latest && Object.values(state.actions).some((a) => a.origin?.kind === 'next-step' && a.origin.checkInDate === latest.date)
+  return {
+    nextStep: latest && text && !planned ? { fromDate: latest.date, text } : null,
+    experiment: currentExperiment(state, date),
   }
 }

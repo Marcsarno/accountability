@@ -2,6 +2,7 @@ import { DownloadSimple, Export, Flask, ShareNetwork, Warning } from '@phosphor-
 import { useState } from 'react'
 import { useStore } from '../app/store'
 import { isStandalone, pushSupport, syncSummary } from '../app/status'
+import { useTheme } from '../app/theme'
 import { planNotices } from '../domain/notices'
 import { Temporal, addDays } from '../domain/time'
 import type { AppState } from '../domain/types'
@@ -18,7 +19,7 @@ export function Settings() {
   const notices = planNotices(state, today)
   const push = pushSupport()
   const sync = syncSummary(state)
-  const theme = document.documentElement.dataset.theme ?? 'system'
+  const [theme, setTheme] = useTheme()
 
   const shift = (hours: number) => setSim({ now: Temporal.Instant.from(now).add({ hours }).toString() })
 
@@ -69,7 +70,7 @@ export function Settings() {
 
       <h2 className="section-title">Appearance</h2>
       <div className="card">
-        <div className="field"><span>Theme</span><div className="seg">{(['system', 'light', 'dark'] as const).map((t) => <button key={t} aria-pressed={theme === t} onClick={() => { if (t === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t; try { localStorage.setItem('theme', t) } catch { /* private mode */ } toast(`Theme: ${t}`) }}>{t[0].toUpperCase() + t.slice(1)}</button>)}</div></div>
+        <div className="field"><span id="theme-label">Theme</span><div className="seg" role="group" aria-labelledby="theme-label">{(['system', 'light', 'dark'] as const).map((t) => <button key={t} aria-pressed={theme === t} onClick={() => setTheme(t)}>{t[0].toUpperCase() + t.slice(1)}</button>)}</div></div>
         <label className="check" style={{ paddingBottom: 0 }}>
           <input type="checkbox" role="switch" {...{ switch: '' }} checked={state.settings.motion === 'reduced'} onChange={(e) => run({ type: 'UpdateSettings', patch: { motion: e.target.checked ? 'reduced' : 'system' } })} />
           <span>Reduce motion in this app</span>
@@ -109,9 +110,9 @@ export function Settings() {
 
       {install && <InstallGuide onClose={() => setInstall(false)} />}
       {confirm && (
-        <Sheet title={confirm === 'delete' ? 'Delete account?' : confirm === 'sample' ? 'Load sample scenario?' : 'Reset?'} onClose={() => setConfirm(null)}>
+        <Sheet title={confirm === 'delete' ? 'Delete account?' : confirm === 'sample' ? 'Load sample scenario?' : 'Reset?'} onClose={() => setConfirm(null)}
+          footer={<button className="btn danger" onClick={() => { if (confirm === 'sample') loadSample(); else resetEmpty(); setConfirm(null); toast(confirm === 'delete' ? 'Deleted (simulated)' : 'Done') }}>{confirm === 'delete' ? 'Delete everything' : confirm === 'sample' ? 'Load sample' : 'Reset'}</button>}>
           <p>{confirm === 'delete' ? 'In the real app this revokes sessions and partner access immediately, then purges active data within 7 days and backups within 35. Here it erases this device’s prototype data.' : 'This replaces everything stored in this browser for the prototype. Export first if you want to keep it.'}</p>
-          <button className="btn danger block" style={{ marginTop: 16 }} onClick={() => { if (confirm === 'sample') loadSample(); else resetEmpty(); setConfirm(null); toast(confirm === 'delete' ? 'Deleted (simulated)' : 'Done') }}>{confirm === 'delete' ? 'Delete everything' : confirm === 'sample' ? 'Load sample' : 'Reset'}</button>
         </Sheet>
       )}
     </>

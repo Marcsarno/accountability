@@ -2,13 +2,24 @@ import { useState } from 'react'
 import { newId, useStore } from '../app/store'
 import { committedUnits } from '../domain/commands'
 import { isOccKey, previewSeriesEdit, resolveUnit, revisionFor } from '../domain/recurrence'
-import type { RepeatRule } from '../domain/types'
-import { Sheet, fmtDate, mins, shortDay, useToast } from '../ui/kit'
+import type { Action, ActionOrigin, RepeatRule } from '../domain/types'
+import { Sheet, fmtDate, mins, originLabel, sameValues, shortDay, useToast } from '../ui/kit'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
+interface Props {
+  unitId?: string
+  initialDate?: string | null
+  /** Starting values for a new action (e.g. a next step being planned). */
+  prefill?: { title: string }
+  origin?: ActionOrigin
+  onClose: () => void
+  /** Called with the new id after creating; the caller closes the sheet. */
+  onSaved?: (id: string) => void
+}
+
 /** Create or edit a one-time action, or edit a single repeat (default) / its series (previewed). */
-export function ActionSheet({ unitId, initialDate, onClose, onSaved }: { unitId?: string; initialDate?: string | null; onClose: () => void; onSaved?: (id: string) => void }) {
+export function ActionSheet({ unitId, initialDate, prefill, origin, onClose, onSaved }: Props) {
   const { state, run, today } = useStore()
   const toast = useToast()
   const occ = unitId && isOccKey(unitId) ? state.occurrences[unitId] : null
@@ -16,57 +27,65 @@ export function ActionSheet({ unitId, initialDate, onClose, onSaved }: { unitId?
   const u = unitId ? resolveUnit(state, unitId) : null
   const series = occ ? state.series[occ.seriesId] : action?.seriesId ? state.series[action.seriesId] : null
 
-  const [title, setTitle] = useState(u?.title ?? '')
-  const [criterion, setCriterion] = useState(u?.criterion ?? '')
-  const [estimate, setEstimate] = useState(u?.estimate?.toString() ?? '')
-  const [cue, setCue] = useState(u?.cue ?? '')
-  const [goal, setGoal] = useState(action?.goal ?? '')
-  const [planned, setPlanned] = useState<string>(action ? action.plannedDate ?? '' : initialDate ?? '')
-  const [deadline, setDeadline] = useState(action?.deadline ?? '')
-  const [notes, setNotes] = useState(action?.notes ?? '')
+  const [initial] = useState(() => ({
+    title: u?.title ?? prefill?.title ?? '',
+    criterion: u?.criterion ?? '',
+    estimate: u?.estimate?.toString() ?? '',
+    cue: u?.cue ?? '',
+    goal: action?.goal ?? '',
+    planned: action ? action.plannedDate ?? '' : initialDate ?? '',
+    deadline: action?.deadline ?? '',
+    notes: action?.notes ?? '',
+    moveTo: occ?.displayDate ?? '',
+  }))
+  const [form, setForm] = useState(initial)
+  const field = (k: keyof typeof initial) => ({
+    value: form[k],
+    onChange: (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value })),
+  })
   const [scope, setScope] = useState<'one' | 'series'>('one')
-  const [moveTo, setMoveTo] = useState(occ?.displayDate ?? '')
   const [rule, setRule] = useState<RepeatRule>({ kind: 'daily', days: [] })
   const [error, setError] = useState<string | null>(null)
   const [overwrite, setOverwrite] = useState<string[]>([])
+  const dirty = !sameValues(form, initial) || overwrite.length > 0
 
+  const { title, criterion, estimate, cue, goal, planned, deadline, notes, moveTo } = form
   const est = estimate.trim() === '' ? null : Math.max(0, Math.round(Number(estimate)))
-  const fail = (m: string) => { setError(m); return false }
 
   const save = () => {
     setError(null)
-    if (!title.trim()) return fail('Give it a short title.')
-    if (estimate.trim() && Number.isNaN(Number(estimate))) return fail('Estimate must be a number of minutes.')
+    if (!title.trim()) return setError('Give it a short title.')
+    if (estimate.trim() && Number.isNaN(Number(estimate))) return setError('Estimate must be a number of minutes.')
     if (occ && scope === 'one') {
       const r = run({ type: 'EditOccurrence', key: occ.key, patch: { title, criterion, estimate: est, cue: cue || null } })
-      if (!r.ok) return fail(r.message)
+      if (!r.ok) return setError(r.message)
       if (moveTo && moveTo !== occ.displayDate) run({ type: 'MoveUnit', unitId: occ.key, toDate: moveTo })
       toast('This repeat updated — the series is unchanged')
     } else if (occ && series && scope === 'series') {
       const cur = revisionFor(series, occ.originDate)!
       const r = run({ type: 'EditSeries', seriesId: series.id, effectiveFrom: occ.originDate, patch: { title, criterion, estimate: est, cue: cue || null, rule: cur.rule }, overwriteExceptions: overwrite })
-      if (!r.ok) return fail(r.message)
+      if (!r.ok) return setError(r.message)
       toast('Future repeats updated; changed ones kept')
     } else if (action) {
       const r = run({ type: 'EditAction', id: action.id, patch: { title, criterion, estimate: est, cue: cue || null, goal: goal || null, plannedDate: planned || null, deadline: deadline || null, notes } })
-      if (!r.ok) return fail(r.message)
+      if (!r.ok) return setError(r.message)
       toast('Saved')
     } else {
       const id = newId()
-      const r = run({ type: 'CreateAction', id, title, criterion, estimate: est, cue: cue || null, goal: goal || null, plannedDate: planned || null, deadline: deadline || null, notes })
-      if (!r.ok) return fail(r.message)
+      const r = run({ type: 'CreateAction', id, title, criterion, estimate: est, cue: cue || null, goal: goal || null, plannedDate: planned || null, deadline: deadline || null, notes, ...(origin && { origin }) })
+      if (!r.ok) return setError(r.message)
       toast(planned ? `Added for ${fmtDate(planned, { weekday: 'long' })}` : 'Added to Inbox')
-      onSaved?.(id)
-      if (onSaved) return true
+      if (onSaved) return onSaved(id)
     }
     onClose()
-    return true
   }
 
   const preview = occ && series && scope === 'series' ? previewSeriesEdit(state, series.id, occ.originDate, committedUnits(state)) : null
 
   return (
-    <Sheet title={unitId ? (occ ? 'Repeat' : 'Action') : 'New action'} onClose={onClose} trailing={<button className="btn quiet" onClick={save} style={{ fontWeight: 700 }}>{unitId ? 'Save' : 'Add'}</button>}>
+    <Sheet title={unitId ? (occ ? 'Repeat' : 'Action') : 'New action'} onClose={onClose} dirty={dirty}
+      footer={<button className="btn primary" onClick={save}>{unitId ? 'Save' : 'Add'}</button>}>
+      {action && <OriginNote action={action} />}
       {occ && (
         <div className="card tint-info" style={{ marginBottom: 16 }}>
           <p style={{ color: 'var(--ink)' }}>Repeat from <b>{fmtDate(occ.originDate)}</b>{occ.displayDate !== occ.originDate && <> · shown on <b>{fmtDate(occ.displayDate)}</b></>}. Its identity stays tied to its original date.</p>
@@ -76,21 +95,21 @@ export function ActionSheet({ unitId, initialDate, onClose, onSaved }: { unitId?
           </div>
         </div>
       )}
-      <label className="field"><span>Action</span><input className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Draft section 2" /></label>
-      <label className="field"><span>Done when…</span><input className="input" value={criterion} onChange={(e) => setCriterion(e.target.value)} placeholder="An observable finish line" /><span className="hint">Minutes spent don’t complete an action — this does.</span></label>
+      <label className="field"><span>Action</span><input className="input" {...field('title')} placeholder="e.g. Draft section 2" /></label>
+      <label className="field"><span>Done when…</span><input className="input" {...field('criterion')} placeholder="An observable finish line" /><span className="hint">Minutes spent don’t complete an action — this does.</span></label>
       <div className="grid2">
-        <label className="field"><span>Estimate (min)</span><input className="input num" inputMode="numeric" value={estimate} onChange={(e) => setEstimate(e.target.value)} placeholder="Unknown" /></label>
-        {!occ && <label className="field"><span>Goal label (private)</span><input className="input" value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="Optional" /></label>}
+        <label className="field"><span>Estimate (min)</span><input className="input num" inputMode="numeric" {...field('estimate')} placeholder="Unknown" /></label>
+        {!occ && <label className="field"><span>Goal label (private)</span><input className="input" {...field('goal')} placeholder="Optional" /></label>}
       </div>
-      <label className="field"><span>When or after what will you start? (optional)</span><input className="input" value={cue} onChange={(e) => setCue(e.target.value)} placeholder="e.g. After first coffee" /><span className="hint">Private unless you choose to share it.</span></label>
+      <label className="field"><span>When or after what will you start? (optional)</span><input className="input" {...field('cue')} placeholder="e.g. After first coffee" /><span className="hint">Private unless you choose to share it.</span></label>
       {!occ && (
         <div className="grid2">
-          <label className="field"><span>Planned day</span><input className="input" type="date" value={planned} onChange={(e) => setPlanned(e.target.value)} /></label>
-          <label className="field"><span>Hard deadline</span><input className="input" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} /></label>
+          <label className="field"><span>Planned day</span><input className="input" type="date" {...field('planned')} /></label>
+          <label className="field"><span>Hard deadline</span><input className="input" type="date" {...field('deadline')} /></label>
         </div>
       )}
-      {occ && scope === 'one' && <label className="field"><span>Move this repeat to</span><input className="input" type="date" value={moveTo} onChange={(e) => setMoveTo(e.target.value)} /><span className="hint">Moving never completes it. The day it lands on keeps its own repeat too.</span></label>}
-      {!occ && <label className="field"><span>Private notes</span><textarea className="textarea" value={notes} onChange={(e) => setNotes(e.target.value)} /></label>}
+      {occ && scope === 'one' && <label className="field"><span>Move this repeat to</span><input className="input" type="date" {...field('moveTo')} /><span className="hint">Moving never completes it. The day it lands on keeps its own repeat too.</span></label>}
+      {!occ && <label className="field"><span>Private notes</span><textarea className="textarea" {...field('notes')} /></label>}
 
       {preview && (
         <div className="preview" style={{ marginBottom: 16 }}>
@@ -106,7 +125,7 @@ export function ActionSheet({ unitId, initialDate, onClose, onSaved }: { unitId?
         </div>
       )}
 
-      {error && <p role="alert" style={{ color: 'var(--warn)', fontWeight: 600 }}>{error}</p>}
+      {error && <p role="alert" className="form-error">{error}</p>}
 
       {action && !action.seriesId && !action.trashedAt && (
         <>
@@ -139,4 +158,10 @@ export function ActionSheet({ unitId, initialDate, onClose, onSaved }: { unitId?
       )}
     </Sheet>
   )
+}
+
+function OriginNote({ action }: { action: Action }) {
+  const { state } = useStore()
+  const label = originLabel(state, action.id)
+  return label && <p className="origin-note">{label}</p>
 }

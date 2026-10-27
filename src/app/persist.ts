@@ -12,13 +12,26 @@ function open(): Promise<IDBDatabase> {
   })
 }
 
+/** One shared connection, so a write starts in the same task as the change that caused it. */
+let connection: Promise<IDBDatabase> | null = null
+function db(): Promise<IDBDatabase> {
+  connection ??= open().then((d) => {
+    d.onclose = () => { connection = null } // closed by the browser (e.g. storage cleared): reopen next time
+    return d
+  }, (e) => { connection = null; throw e })
+  return connection
+}
+
+/** Read-write transactions on one store run in creation order, so successive saves never land out of order. */
 async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  const db = await open()
+  const d = await db()
   return new Promise((resolve, reject) => {
-    const t = db.transaction(STORE, mode)
+    const t = d.transaction(STORE, mode)
     const req = fn(t.objectStore(STORE))
     t.oncomplete = () => resolve(req.result)
     t.onerror = t.onabort = () => reject(t.error ?? req.error)
+    // Commit now rather than when the task ends; this narrows the window in which closing the app loses the write.
+    t.commit?.()
   })
 }
 
@@ -35,10 +48,6 @@ export async function loadState(ownerId: string): Promise<AppState | null> {
 
 export async function saveState(state: AppState): Promise<void> {
   await tx('readwrite', (s) => s.put(state, key(state.owner.id)))
-}
-
-export async function clearState(ownerId: string): Promise<void> {
-  await tx('readwrite', (s) => s.delete(key(ownerId)))
 }
 
 export async function requestPersistence(): Promise<boolean | null> {

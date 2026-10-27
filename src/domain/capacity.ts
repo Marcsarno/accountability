@@ -1,3 +1,6 @@
+/** Starting point for "time available" on a day the owner hasn't set yet. */
+export const DEFAULT_AVAILABLE_MIN = 60
+
 export interface CapacityEntry {
   /** Minutes, or null when the estimate is unknown. Unknown is never zero. */
   estimate: number | null

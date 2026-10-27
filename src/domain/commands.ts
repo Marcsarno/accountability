@@ -1,16 +1,16 @@
-import { summarizeCapacity } from './capacity'
+import { DEFAULT_AVAILABLE_MIN, summarizeCapacity } from './capacity'
 import { replyDue } from './reply'
 import { generateOccurrences, isOccKey, occKey, resolveUnit, unitsOn } from './recurrence'
 import { addDays, compareDates, resolveLocal, weekday, type LocalDate } from './time'
 import type {
-  Action, Agreement, AgreementTerms, AppState, CheckInRevision, Outcome, PlanEntry, ProgressEvent, RepeatRule,
-  ShareField, SharedItem, ShareSnapshot, UnitId,
+  Action, ActionOrigin, Agreement, AgreementTerms, AppState, CheckInRevision, Outcome, PlanEntry, ProgressEvent, RepeatRule,
+  DayPlan, ShareField, SharedItem, ShareSnapshot, UnitId,
 } from './types'
 
 export interface Ctx { now: string; id: () => string }
 
 export type Command =
-  | { type: 'CreateAction'; id: string; title: string; criterion: string; estimate: number | null; cue: string | null; goal: string | null; plannedDate: LocalDate | null; deadline: LocalDate | null; notes: string }
+  | { type: 'CreateAction'; id: string; title: string; criterion: string; estimate: number | null; cue: string | null; goal: string | null; plannedDate: LocalDate | null; deadline: LocalDate | null; notes: string; origin?: ActionOrigin }
   | { type: 'EditAction'; id: string; patch: Partial<Pick<Action, 'title' | 'criterion' | 'estimate' | 'cue' | 'goal' | 'plannedDate' | 'deadline' | 'notes'>> }
   | { type: 'EditOccurrence'; key: UnitId; patch: Partial<Pick<Action, 'title' | 'criterion' | 'estimate' | 'cue'>> }
   | { type: 'MoveUnit'; unitId: UnitId; toDate: LocalDate | null }
@@ -82,6 +82,11 @@ export function latestPlanRev(state: AppState, date: LocalDate) {
   return p?.revisions.at(-1) ?? null
 }
 
+/** The day's working selection. A day nobody has touched has no stored draft, only this default. */
+export function draftFor(state: AppState, date: LocalDate): DayPlan['draft'] {
+  return state.plans[date]?.draft ?? { available: DEFAULT_AVAILABLE_MIN, unitIds: [] }
+}
+
 /** Current (latest, correction-aware) event for a unit on a plan date. */
 export function currentEvent(state: AppState, date: LocalDate, unitId: UnitId): ProgressEvent | null {
   let found: ProgressEvent | null = null
@@ -91,6 +96,13 @@ export function currentEvent(state: AppState, date: LocalDate, unitId: UnitId): 
 
 export function activeAgreement(state: AppState): Agreement | null {
   return state.agreements.find((a) => a.status === 'active' || a.status === 'paused' || a.status === 'invited') ?? null
+}
+
+/** Name of the partner whose reply carried a suggestion, if that agreement is still on record. */
+export function suggestedBy(state: AppState, feedbackId: string): string | null {
+  const f = state.feedback.find((x) => x.id === feedbackId)
+  const snap = f && state.snapshots.find((x) => x.id === f.snapshotId)
+  return (snap && state.agreements.find((a) => a.id === snap.agreementId)?.peer.name) ?? null
 }
 
 export function latestCheckIn(state: AppState, date: LocalDate): CheckInRevision | null {
@@ -150,10 +162,12 @@ function apply(s: AppState, cmd: Command, ctx: Ctx): Err | null {
   switch (cmd.type) {
     case 'CreateAction': {
       if (!cmd.title.trim()) return invalid('Give the action a short title.')
+      if (cmd.origin?.kind === 'next-step' && !latestCheckIn(s, cmd.origin.checkInDate)) return invalid('That check-in no longer exists.')
+      if (cmd.origin?.kind === 'suggestion') return invalid('Accept a partner suggestion from its reply instead.')
       s.actions[cmd.id] = {
         id: cmd.id, title: cmd.title.trim(), criterion: cmd.criterion.trim(), estimate: cmd.estimate, cue: cmd.cue || null,
         goal: cmd.goal || null, plannedDate: cmd.plannedDate, deadline: cmd.deadline, notes: cmd.notes, createdAt: ctx.now,
-        seriesId: null, withdrawn: false, trashedAt: null,
+        seriesId: null, withdrawn: false, trashedAt: null, ...(cmd.origin && { origin: cmd.origin }),
       }
       return null
     }
@@ -358,7 +372,8 @@ function apply(s: AppState, cmd: Command, ctx: Ctx): Err | null {
       if (f.acceptedActionId) return null
       s.actions[cmd.actionId] = {
         id: cmd.actionId, title: f.suggestion.title, criterion: f.suggestion.criterion, estimate: f.suggestion.estimate, cue: null, goal: null,
-        plannedDate: null, deadline: null, notes: 'Suggested by your partner.', createdAt: ctx.now, seriesId: null, withdrawn: false, trashedAt: null,
+        plannedDate: null, deadline: null, notes: '', createdAt: ctx.now, seriesId: null, withdrawn: false, trashedAt: null,
+        origin: { kind: 'suggestion', feedbackId: f.id },
       }
       f.acceptedActionId = cmd.actionId
       return null

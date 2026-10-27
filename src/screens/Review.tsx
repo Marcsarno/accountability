@@ -2,7 +2,7 @@ import { Flask } from '@phosphor-icons/react'
 import { useState } from 'react'
 import { useStore } from '../app/store'
 import { latestCheckIn } from '../domain/commands'
-import { OUTCOMES, summarizeDay, summarizeWeek, type DaySummary } from '../domain/review'
+import { OUTCOMES, currentExperiment, summarizeDay, summarizeWeek, type DaySummary } from '../domain/review'
 import { addDays } from '../domain/time'
 import { HorizonArt, OutcomeMark, OUTCOME_LABEL, fmtDate, mins, shortDay, useToast } from '../ui/kit'
 
@@ -12,8 +12,15 @@ export function Review() {
   const [mode, setMode] = useState<'week' | 'day'>('week')
   const [date, setDate] = useState(today)
   const week = summarizeWeek(state, today)
-  const exp = state.experiments.filter((e) => e.weekEnd === today).at(-1)
+  const exp = currentExperiment(state, today)
+  const [choosing, setChoosing] = useState(false)
   const [custom, setCustom] = useState('')
+  const choose = (text: string) => {
+    const r = run({ type: 'SetExperiment', weekEnd: today, text })
+    if (!r.ok) return
+    toast('Experiment set for the next seven days')
+    setChoosing(false); setCustom('')
+  }
 
   const suggestions: string[] = []
   const overDays = week.days.filter((d) => d.planned && state.plans[d.date].revisions[0].acknowledged).length
@@ -62,16 +69,22 @@ export function Review() {
             <div className="list">{week.days.map((d) => <DayRow key={d.date} d={d} onClick={() => { setDate(d.date); setMode('day') }} />)}</div>
 
             <h2 className="section-title">Next experiment</h2>
-            {exp ? (
-              <div className="card tint-signal"><h3><Flask size={16} weight="bold" style={{ verticalAlign: '-2px' }} /> This week</h3><p style={{ color: 'var(--ink)' }}>{exp.text}</p><p className="footnote">Try it for a week, then look again.</p></div>
+            {exp && !choosing ? (
+              <div className="card tint-signal">
+                <h3><Flask size={16} weight="bold" aria-hidden="true" /> This week</h3>
+                <p className="experiment-text">{exp.text}</p>
+                <p className="footnote">Chosen {fmtDate(exp.weekEnd, { weekday: 'long' })}. Try it for a week, then look again. You’ll see it when you plan and check in.</p>
+                <button className="btn quiet small flush" onClick={() => setChoosing(true)}>Choose a different one</button>
+              </div>
             ) : (
               <div className="card">
-                <p style={{ marginBottom: 10 }}>Pick one small change to try. Just one.</p>
-                {suggestions.map((t) => <button key={t} className="row" style={{ borderRadius: 12, background: 'var(--surface-2)', marginBottom: 6 }} onClick={() => { run({ type: 'SetExperiment', weekEnd: today, text: t }); toast('Experiment set for this week') }}><span className="grow">{t}</span></button>)}
-                <form onSubmit={(e) => { e.preventDefault(); const r = run({ type: 'SetExperiment', weekEnd: today, text: custom }); if (r.ok) toast('Experiment set for this week') }} style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <p className="picker-lede">Pick one small change to try. Just one.</p>
+                {suggestions.map((t) => <button key={t} className="row suggestion" onClick={() => choose(t)}><span className="grow">{t}</span></button>)}
+                <form className="inline-form" onSubmit={(e) => { e.preventDefault(); choose(custom) }}>
                   <input className="input" aria-label="Your own experiment" placeholder="Or write your own" value={custom} onChange={(e) => setCustom(e.target.value)} />
                   <button className="btn" type="submit" disabled={!custom.trim()}>Set</button>
                 </form>
+                {exp && <button className="btn quiet small flush" onClick={() => setChoosing(false)}>Keep “{exp.text}”</button>}
               </div>
             )}
           </>

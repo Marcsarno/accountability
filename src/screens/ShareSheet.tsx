@@ -33,7 +33,13 @@ export function ShareSheet({ kind, date, onClose }: { kind: 'plan' | 'checkin'; 
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
 
   return (
-    <Sheet title={kind === 'plan' ? 'Share plan' : prior ? 'Amend shared check-in' : 'Share results'} onClose={onClose}>
+    <Sheet title={kind === 'plan' ? 'Share plan' : prior ? 'Amend shared check-in' : 'Share results'} onClose={onClose}
+      dirty={message !== (prior?.message ?? '')}
+      footer={
+        <button className="btn primary" disabled={'error' in preview || !state.sim.online || unitIds.length === 0} onClick={publish}>
+          <PaperPlaneTilt size={18} weight="bold" /> {prior ? 'Confirm amendment' : 'Confirm and share'}
+        </button>
+      }>
       {'error' in preview && !unitIds.length ? null : 'error' in preview ? <Banner tone="warn">{preview.error}</Banner> : null}
       <p style={{ margin: '0 0 12px', color: 'var(--ink-2)' }}>
         {kind === 'plan' ? 'Before you start: share selected commitments. No results are shared and no reply is expected.' : 'Choose exactly what your partner sees. Your private check-in stays private.'}
@@ -80,9 +86,6 @@ export function ShareSheet({ kind, date, onClose }: { kind: 'plan' | 'checkin'; 
       )}
       {!state.sim.online && <Banner tone="warn">Sharing needs a connection. Nothing will be sent while offline.</Banner>}
       {error && <Banner tone="warn">{error}</Banner>}
-      <button className="btn primary block" style={{ marginTop: 16 }} disabled={'error' in preview || !state.sim.online || unitIds.length === 0} onClick={publish}>
-        <PaperPlaneTilt size={18} weight="bold" /> {prior ? 'Confirm amendment' : 'Confirm and share'}
-      </button>
     </Sheet>
   )
 }

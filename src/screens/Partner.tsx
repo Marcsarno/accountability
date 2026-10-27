@@ -94,12 +94,12 @@ export function Partner() {
       )}
 
       {inviting && <InviteSheet onClose={() => setInviting(false)} />}
-      {replying && ag && <ReplySheet onClose={() => setReplying(false)} />}
+      {replying && ag && <ReplySheet ag={ag} onClose={() => setReplying(false)} />}
       {confirm && ag && (
-        <Sheet title={confirm === 'end' ? 'End agreement?' : `Block ${ag.peer.name}?`} onClose={() => setConfirm(null)}>
+        <Sheet title={confirm === 'end' ? 'End agreement?' : `Block ${ag.peer.name}?`} onClose={() => setConfirm(null)}
+          footer={<button className="btn danger" onClick={() => { act({ type: 'AgreementAction', action: confirm }, confirm === 'end' ? 'Agreement ended' : 'Blocked and ended'); setConfirm(null) }}>{confirm === 'end' ? 'End agreement' : 'Block and end'}</button>}>
           <p>{ag.peer.name} immediately loses access to everything you shared, including old links and previews. Your own plans and the replies you received stay with you.{confirm === 'block' ? ' They can’t invite you again.' : ''}</p>
           <p className="footnote">Anything they already viewed or copied can’t be recalled.</p>
-          <button className="btn danger block" style={{ marginTop: 16 }} onClick={() => { act({ type: 'AgreementAction', action: confirm }, confirm === 'end' ? 'Agreement ended' : 'Blocked and ended'); setConfirm(null) }}>{confirm === 'end' ? 'End agreement' : 'Block and end'}</button>
         </Sheet>
       )}
     </>
@@ -174,7 +174,7 @@ function InviteSheet({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null)
   const send = () => { const r = run({ type: 'Invite', name, email, terms }); if (!r.ok) setError(r.message); else { toast('Invitation sent (simulated)'); onClose() } }
   return (
-    <Sheet title="Invite a partner" onClose={onClose}>
+    <Sheet title="Invite a partner" onClose={onClose} dirty={!!(name || email)} footer={<button className="btn primary" onClick={send}>Send invitation</button>}>
       <p style={{ marginTop: 0, color: 'var(--ink-2)' }}>They’ll see the agreement below before accepting. Nothing is shared until you choose, day by day.</p>
       <label className="field"><span>Their name</span><input className="input" value={name} onChange={(e) => setName(e.target.value)} /></label>
       <label className="field"><span>Their email</span><input className="input" type="email" inputMode="email" autoComplete="off" value={email} onChange={(e) => setEmail(e.target.value)} /><span className="hint">Only the person signed in with this email can accept. Expires in 7 days.</span></label>
@@ -186,15 +186,15 @@ function InviteSheet({ onClose }: { onClose: () => void }) {
       <label className="field"><span>Minimum time to reply after a late share (hours)</span><input className="input num" inputMode="numeric" value={terms.minIntervalHours} onChange={(e) => setTerms({ ...terms, minIntervalHours: Number(e.target.value.replace(/\D/g, '')) || 0 })} /></label>
       <label className="check"><input type="checkbox" checked={terms.followUpAllowed} onChange={(e) => setTerms({ ...terms, followUpAllowed: e.target.checked })} /><span>Remind me once if I haven’t shared by the cutoff</span></label>
       {error && <Banner tone="warn">{error}</Banner>}
-      <button className="btn primary block" onClick={send}>Send invitation</button>
     </Sheet>
   )
 }
 
-function ReplySheet({ onClose }: { onClose: () => void }) {
+function ReplySheet({ ag, onClose }: { ag: Agreement; onClose: () => void }) {
   const { state, run } = useStore()
   const toast = useToast()
-  const latest = [...state.snapshots].reverse().find((s) => s.kind === 'checkin')
+  // The partner can only reply to check-ins shared under the current agreement.
+  const latest = state.snapshots.filter((s) => s.kind === 'checkin' && s.agreementId === ag.id).at(-1)
   const [text, setText] = useState('')
   const [sTitle, setSTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -204,12 +204,11 @@ function ReplySheet({ onClose }: { onClose: () => void }) {
     if (!r.ok) setError(r.message); else { toast('Reply recorded (simulated partner)'); onClose() }
   }
   return (
-    <Sheet title="Simulated reply" onClose={onClose}>
+    <Sheet title="Simulated reply" onClose={onClose} dirty={!!(text || sTitle)} footer={<button className="btn primary" onClick={send}>Send as partner</button>}>
       <p className="footnote">Replying to {fmtDate(latest.date)}, version {latest.version}.</p>
       <label className="field"><span>Reply</span><textarea className="textarea" value={text} onChange={(e) => setText(e.target.value)} /></label>
       <label className="field"><span>Suggest a next action (optional)</span><input className="input" value={sTitle} onChange={(e) => setSTitle(e.target.value)} /></label>
       {error && <Banner tone="warn">{error}</Banner>}
-      <button className="btn primary block" onClick={send}>Send as partner</button>
     </Sheet>
   )
 }

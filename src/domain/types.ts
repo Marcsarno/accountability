@@ -20,7 +20,15 @@ export interface Action {
   seriesId: Id | null
   withdrawn: boolean
   trashedAt: string | null
+  /** How the action came about when it wasn't captured directly. Absent on actions saved before this field existed. */
+  origin?: ActionOrigin
 }
+
+export type ActionOrigin =
+  /** Planned from the "next step" of the private check-in on `checkInDate`. */
+  | { kind: 'next-step'; checkInDate: LocalDate }
+  /** A partner's suggestion the owner accepted as a draft (A18). */
+  | { kind: 'suggestion'; feedbackId: Id }
 
 export interface RepeatRule {
   kind: 'daily' | 'weekdays'
@@ -209,6 +217,13 @@ export interface ReportCase {
   status: 'open'
 }
 
+export interface Experiment {
+  /** Last day of the reviewed week. The experiment runs from that day for seven days. */
+  weekEnd: LocalDate
+  text: string
+  at: string
+}
+
 export interface Settings {
   reminderTime: string | null
   quietStart: string
@@ -236,7 +251,7 @@ export interface AppState {
   reports: ReportCase[]
   /** Units (actions or series ids) whose shared copies are no longer visible to partners. */
   revokedUnits: string[]
-  experiments: { weekEnd: string; text: string; at: string }[]
+  experiments: Experiment[]
   settings: Settings
   onboarded: boolean
 }
