@@ -19,17 +19,16 @@ npm run dev         # local dev server
 ```
 
 ## Where things stand (2026-10-27)
-- Git history is included (`.git`, branch `main`). Not yet pushed anywhere.
-- GitHub repo exists and is empty: **HornerXpress/accountability-tracker**.
-  Push with: `git remote add origin https://github.com/HornerXpress/accountability-tracker.git && git push -u origin main`
-  (The previous cloud session could not push: Claude was not yet linked to the HornerXpress GitHub account.)
-- Vercel: project import for that repo was started under the **HornerXpress** team. Settings:
-  preset **Vite**, build `npm run build`, output `dist`. Once code is pushed, Vercel deploys on each push.
-  Add a `vercel.json` with `Cache-Control: no-cache` for `/sw.js`, `/index.html`, `/manifest.webmanifest`
-  and SPA rewrites before relying on updates.
+- GitHub: **Marcsarno/accountability** (supersedes the earlier HornerXpress/accountability-tracker plan).
+- Vercel: project **accountability** in the **marcsarno** team, linked to that repo. Every push deploys;
+  the production branch gets the stable URL https://accountability-lilac.vercel.app (install the PWA
+  from that one — installs and push are tied to the origin). Other branches get preview URLs, which
+  sit behind Vercel sign-in (team deployment protection); the production domain above is public.
+- `vercel.json` sets `Cache-Control: no-cache` on `/sw.js`, `/index.html`, `/manifest.webmanifest` so the
+  update prompt sees new deploys, immutable caching on `/assets/*`, and an SPA fallback to `index.html`.
 
 ## Next steps
-1. Push to GitHub → Vercel deploys → open the URL in Safari on iPhone → Share → Add to Home Screen.
+1. Open https://accountability-lilac.vercel.app in Safari on iPhone → Share → Add to Home Screen.
 2. Run the device checklist in `docs/PWA_PREP.md` §4 and `docs/PHASE0.md` “Remaining experiments”.
 3. Phase 1 (real private slice): pick backend (Supabase is the leading candidate), write the ADR
    listed in `docs/PHASE0.md`, then sign-in, schema/migrations and the private loop (A01–A08).
