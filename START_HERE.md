@@ -1,5 +1,10 @@
 # Start here (handoff to a new chat)
 
+> **2026-10-28: app development is paused.** Read `docs/COMBINED_PLAN.md` first. It merges this
+> project's accountability research with ADHD planning research into one plan, to be built later
+> into the Sarno Family App (`Marcsarno/Sarno`). Next step: the two-week trial in section 6 of that
+> plan, which uses this prototype as is. Polish waves 4–6 (`docs/POLISH_PLAN.md`) are on hold.
+
 This is **Accountability Tracker** (working name *Daymark*), an iPhone-first PWA built from
 `docs/Wave8_Handoff.md`. **Phase 0 (interactive prototype) is complete**: fictional local data,
 simulations clearly labelled. Nothing has been tested on a real iPhone yet.

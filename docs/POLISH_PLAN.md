@@ -14,6 +14,7 @@ same domain rules, simulations still labelled.
 - **Honest tone.** No streaks or scores; "Day marked" is the only celebration.
 
 ## Status
+- **Paused 2026-10-28** after waves 1–3. Waves 4–6 are on hold; see `docs/COMBINED_PLAN.md`.
 - **Waves 1–3 done (2026-10-27).** All bugs below fixed except B7, which turned out not to be a bug:
   occurrences are only ever added there, so comparing counts is correct.
 - **Found and fixed during wave 3: B8.** A result could be lost if the app closed right after it was
