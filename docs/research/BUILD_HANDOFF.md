@@ -1,6 +1,12 @@
 # Build handoff: Marc's ADHD feature in Sarno (2026-10-28)
 
-Read this first after compaction. Research is finished; next step is building.
+Read this first after compaction.
+
+**Update (2026-10-28, later):** the newest report, `ADHD feature integration and behaviour.md`, changes the plan:
+- **Don't build here and don't build a skeleton to merge.** Sarno's UI is generated from one template, so a skeleton can't carry over. This session writes the handoff spec; a Claude Code session inside the Sarno repo builds it in phases on a branch.
+- **"The phone plans, the server only fires."** The earlier server-run nag ladder conflicts with Sarno's migration 0004 and privacy test S. The app plans 14 days of pushes into owner-only tables; pg_cron moves due ones into `notifications`; `api/focus-send.js` sends them.
+- The four rounds below become **five phases** (decide & baseline, contract without UI, screens, fire, Smart Add). Marc has **16 decisions** to make first (see the report's table).
+- That report also holds the behaviour spec (states, ladder timings, Now screen, wording, kid-day windows, recovery, focus).
 
 ## Decisions Marc has made
 - Build it **into Sarno** (`Marcsarno/Sarno`, app in `SarnoPWA/`), **for Marc only**. Yola and sitters see no change.
@@ -8,6 +14,7 @@ Read this first after compaction. Research is finished; next step is building.
 - He wants **as many notifications as useful**.
 
 ## What the research concluded (reports in this folder, newest first)
+0. `ADHD feature integration and behaviour.md`: build path, Sarno conflicts, behaviour spec, decisions, spec outline. **Supersedes the rounds below.**
 1. `Why top ADHD apps work.md`: why Finch, Goblin Tools, Due, Structured, Routinery and iPhone alarms/Reminders work; 8 principles; **25-row build checklist**. Start here.
 2. `Best free ADHD apps by reviews.md`: genuine-review ranking (alarms/Reminders win; vendor lists are biased).
 3. `iPhone PWA notifications for ADHD.md`: iOS web push ceiling (from WebKit source), payload/headers, the escalation ladder, reminder science.
