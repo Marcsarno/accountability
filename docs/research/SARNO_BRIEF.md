@@ -52,6 +52,10 @@ below, and decide the open points with Marc.** Follow `SarnoPWA/CLAUDE.md` as al
   conflicts with this brief (partner, trial, server-side nudges), this brief wins.
 - `Wave8_Handoff.md`: the original accountability spec, requirements A01–A32 and acceptance tests.
 - `PHASE0.md`: decisions and the requirement-to-test record from the Daymark prototype.
+- `PWA_PREP.md`: verified iPhone PWA platform research done for the tracker.
+- `POLISH_PLAN.md`: a review of the prototype (bugs, weak spots, what waves 1–3 fixed).
+- Waves 1–7 of the original research are private ChatGPT pages linked from the Wave 8 handoff, and
+  are not included.
 - The Daymark prototype code (`Marcsarno/accountability`, `src/domain`) shows working behaviour
   for plans, results, carry-forward and day close. It is TypeScript and doesn't fit Sarno's code, so
   use it as a behaviour reference, not code to copy.

@@ -52,6 +52,10 @@ below, and decide the open points with Marc.** Follow `SarnoPWA/CLAUDE.md` as al
   conflicts with this brief (partner, trial, server-side nudges), this brief wins.
 - `Wave8_Handoff.md`: the original accountability spec, requirements A01–A32 and acceptance tests.
 - `PHASE0.md`: decisions and the requirement-to-test record from the Daymark prototype.
+- `PWA_PREP.md`: verified iPhone PWA platform research done for the tracker.
+- `POLISH_PLAN.md`: a review of the prototype (bugs, weak spots, what waves 1–3 fixed).
+- Waves 1–7 of the original research are private ChatGPT pages linked from the Wave 8 handoff, and
+  are not included.
 - The Daymark prototype code (`Marcsarno/accountability`, `src/domain`) shows working behaviour
   for plans, results, carry-forward and day close. It is TypeScript and doesn't fit Sarno's code, so
   use it as a behaviour reference, not code to copy.
@@ -72,256 +76,6 @@ tests for each. No deploys, SQL or production pushes without Marc's explicit OK.
 # Appendix: the full research
 
 All research follows in full: first the accountability tracker documents, then the five ADHD reports, newest first. They are background and suggestions; the brief above and Marc have the final say. Links to files under /home/user/ or relative links point to notes or code that are not included.
-
----
-
-# Document: COMBINED_PLAN
-
-# Combined plan: accountability + ADHD-friendly planning, for the Sarno Family App (2026-10-28)
-
-**Status: planning only.** Daymark app development is paused (polish waves 4–6 not started).
-This merges two research lines:
-
-- **Accountability:** `docs/Wave8_Handoff.md` (spec, A01–A32) and the Daymark prototype built from it.
-- **ADHD planning:** the 2026-10-28 hand-off (six ideas, feature list, two-week trial).
-
-The result is to be built later into the **Sarno Family App** (`Marcsarno/Sarno`, `SarnoPWA/`;
-Supabase project "Sarno Family Hub"). Everything about Sarno below was read from its repo
-(`61f944c`) and its live schema on 2026-10-28; nothing was changed there.
-
----
-
-## 1. What it is
-
-A private daily loop inside Sarno for the parents (owner/parent roles):
-
-1. **Capture**, messy, in one tap.
-2. **Pick today's top 3**, with one marked as the *minimum*.
-3. **Plan each one's start** as a tiny first step plus an if-then: "If it's 9:00, then I open the draft."
-4. **Get nudged** at that moment.
-5. **See time passing.**
-6. **Record what happened** in one tap.
-7. **Close the day** with a short recap and one next step for tomorrow.
-8. **Optionally share** selected parts with the other parent, who can suggest but never decide.
-
-The promise stays the one from Wave 8: *a manageable commitment, an honest result, a practical
-next attempt*. Missed days are expected, not punished.
-
-**Who for:** the person typing, and optionally their spouse as partner. Sarno already limits
-personal to-dos to owner/parent at the database level, so sitters and children are out of scope
-by construction. Nothing here promises better outcomes. It is a tool to try, and the trial
-(section 6) decides what gets built.
-
----
-
-## 2. The evidence, checked
-
-Each of the hand-off's six ideas, rated after reading the cited sources on 2026-10-28.
-
-| Idea | What the source actually is | Strength | Consequence for the plan |
-|---|---|---|---|
-| 1. One trusted place: one calendar + one task list, checked daily | Safren's CBT program for adult ADHD ("Mastering Your Adult ADHD"). Sprich et al. 2012 is a *clinical overview*: calendar + task list are "the foundation for subsequent skills", reviewed at least daily. Tested as a whole program **with medication** (small RCT: CBT n=16 vs n=15; CHADD also cites a 2010 JAMA trial). The component alone was never isolated. | Moderate (as part of a program) | Build on Sarno's existing calendar + personal reminders; never add a second list. Daily review is the core habit. |
-| 2. Two-step nudges, varied wording, daily cap | Safren's program uses "cue alarms" and timers. The two-step pattern, wording rotation and cap are **design inferences**, not tested findings. | Weak / inferred | Build only if the trial shows nudges help; keep the cap and rotation adjustable. |
-| 3. Make time visible (timers, buffers, guessed vs actual) | Safren: measure your attention span and split tasks into chunks that fit it (e.g. 15 min). Guessed-vs-actual feedback is an inference. | Weak–moderate | Daymark already records estimate + actual minutes, so calibration feedback is cheap. |
-| 4. Shrink the first step | Safren: break long tasks into smaller chunks; an optional procrastination module. "Built-up dread" is practitioner framing. | Moderate (as part of a program) | Explicit *first step* field; the evening recap's "next step" asks for the smallest version. |
-| 5. If-then plans | Gawrilow, Gollwitzer & Oettingen 2011 (*Cogn Ther Res* 35:442): children with ADHD (inpatient n=45, mean age 10.7; outpatient n=47, mean age 10.3) waited longer in a **computerised delay-of-gratification task** after forming if-then plans; goal intentions alone did not help them. A lab task in children, not "pack tomorrow's bag" — that example is illustrative. Adult transfer is an assumption, though implementation intentions are well studied in adults generally. | Moderate for the mechanism, weak for this use | Upgrade Daymark's start cue into a real if-then; a time-based "if" is what the nudge fires on. |
-| 6. Company and kindness | Body doubling: Healthline itself says research is "scant"; the main study (Eagle et al. 2024) is about experiences. Kindness: Safren's cognitive restructuring; "don't expect gains to be linear". ADDitude (Gretchen Rubin) is anecdotal and only supports the "ta-da" done list. | Weak | Partner stays optional and suggest-only; "work alongside" is a trial experiment, not a build item. Kindness is a design rule everywhere (no red for misses, no streak resets). |
-
-**Bottom line:** the strongest support is for a structured routine (one list, daily review,
-chunking, if-then) taught as a program. Most app-specific mechanics are reasonable inferences.
-That is why a cheap trial comes before any build.
-
----
-
-## 3. How the two research lines fit together
-
-Most of the ADHD ideas are already Daymark mechanisms under another name. Where they conflict,
-this is the resolution:
-
-| Topic | Accountability (Wave 8 / Daymark) | ADHD hand-off | Combined decision |
-|---|---|---|---|
-| Daily size | "Suggest one to three commitments" | Top 3 each morning | Same. Top 3, soft limit (more allowed, with the capacity warning). |
-| Minimum vs ideal | — | Minimum day next to the ideal day | **New:** mark one item as the minimum. A day counts as "showed up" when the minimum is done or partial. |
-| Capture | Title + observable criterion + estimate | Near-effortless, messy is fine | Capture is text only (Sarno's reminder row or Smart Add). Criterion, first step and estimate are asked **only when an item is picked for today**, and are optional. |
-| Starting | Optional start cue ("When or after what will you start?") | If-then plans; tiny first step | The start cue becomes **If [time or event] → then [first step]**. A time "if" schedules a nudge. |
-| Reminders | Bounded notices, quiet hours, generic text, dedupe | Two-step nudges, varied wording, daily cap | Combine: two steps (get ready, start now), rotating generic wording, quiet hours, a daily cap, no titles on the lock screen by default. |
-| Time | Capacity bar: estimates vs available minutes | Countdown, buffers, guessed vs actual | Keep capacity; add a buffer default and a countdown; weekly "you guessed 20, it took 45" calibration from estimate vs actual. |
-| Results | Completed / partial / missed / skipped / not reported; corrections kept | Done list that shows wins | Keep honest outcomes. **Add a wins log** for unplanned things done: it shows on the done list but never changes the planned-item counts. |
-| Streaks | None; "no punitive streak system" | Streaks that survive a skip | **No streak counter.** Show "showed up 5 of the last 7 days". It survives a skip by design and never resets to zero. |
-| Missed days | Unreported ≠ missed; time away; restart without backlog (A26) | Expect missed days; avoid shame spirals | Same principle; already built in Daymark. |
-| Evening | Private check-in; next step carried to the next day | Evening recap of what got done | Same, plus a short done list at the top of the recap. |
-| Afternoon | — | One gentle afternoon check-in | **New:** one optional afternoon nudge to record quick results or shrink the plan. |
-| Partner | One accepted peer; invite by email; previews; reply windows; block/report | Opt-in partner check-ins that suggest, not decide | Partner is **the other parent, already in the household**. Keep: opt-in, per-day share preview, suggestions become drafts only. Drop for v1: email invites, reply-window deadlines, block/report/moderation (household trust). |
-| Breaking down | "Shrink one finish line" suggestion | "Break it down" button | Manual first: "What's the 2-minute version?" An AI proposal via Smart Add's propose-then-confirm pattern only if the trial shows the manual prompt gets used and still stalls. |
-| AI | Excluded from first release | — | Sarno already uses Claude (Sonnet) for Smart Add, propose-only. Any AI here follows that rule: proposes, never writes. |
-| Calendar | Calendar ingestion deferred | One trusted place incl. calendar | Sarno *is* the family calendar. Today's view shows that day's family events beside the top 3, so planning happens against real commitments. |
-
----
-
-## 4. Fitting it into Sarno
-
-Facts that constrain the design (from `SarnoPWA/CLAUDE.md`, migrations 0001–0007 and the live
-schema):
-
-- **UI is generated.** `src/AppView.jsx` is generated from `tools/proto/markup.html`; logic lives in
-  the `AppLogic` class in `src/logic.js`; `tools/verify.py`, `test:empty`, `test:privacy` and
-  `smoke` must stay green.
-  Daymark's React screens therefore cannot be dropped in. Its **rules** can be ported as a pure
-  module, the way `src/smartadd.js` is shared by the client and `api/smart-add.js`.
-- **`personal_todos` is the one properly private table**: `user_id = auth.uid()` plus active
-  owner/parent membership, enforced by RLS. Columns: `text` (≤500), `due` (date only), `priority`,
-  `done`, `completed_at`. It is the natural capture inbox.
-- **Push policy:** only `event_invite`, `direct_message` and `supply_request` push ("somebody
-  deliberately chose you"); `reminder_due` exists but is in-app only. Notifications are created
-  only by the server (no browser insert grant), deduplicated by `(recipient_id, dedupe_key)`.
-  Lock-screen text is kept generic.
-- **No scheduler exists.** No Supabase Edge Functions; push is sent by the Vercel function
-  `api/notify.js` when something happens. Sarno's own deferred-features note says push reminders
-  need "a small server-side surface that holds secrets and can act while the app is closed. Build it once."
-- **Open blocker in Sarno:** the 11 manual live-RLS tests have never been run.
-
-### 4.1 Where it lives in the app
-A **My Day** section at the top of My Page, where personal reminders already live. Reminders stay
-the inbox; My Day is the plan. The "+" menu and Smart Add keep working for capture.
-
-### 4.2 Data — proposed tables (not a migration yet)
-Every table is private and follows the `personal_todos` pattern:
-- `user_id default auth.uid()`
-- `household_id`
-- RLS `user_id = auth.uid() AND is_household_manager(household_id)`
-- no views or definer functions that bypass RLS
-
-Nothing private goes into `family_data`, which every household member can read.
-
-| Table | Purpose | Key columns |
-|---|---|---|
-| `focus_days` | One row per person per local date | `date`, `zone` (frozen at first commit), `available_min`, unique `(user_id, date)` |
-| `focus_entries` | The day's picks, snapshotted when committed | `day_id`, `todo_id` (nullable), `title`, `first_step`, `if_cue`, `cue_at` (timestamptz, nullable), `estimate_min`, `is_minimum`, `position`, `added_at`, `removed_at` — original vs revised plan is derivable from these timestamps instead of full revisions |
-| `focus_results` | Append-only outcomes | `entry_id`, `outcome` (completed / partial / missed / skipped), `actual_min`, `performed_at`, `recorded_at`, `corrects` |
-| `focus_checkins` | Append-only evening recaps | `day_id`, `rev`, `reflection` (private), `next_step` |
-| `focus_wins` | Unplanned things done | `date`, `text` |
-| `focus_nudges` | Scheduled nudges | `entry_id` / `day_id`, `kind` (get_ready / start_now / afternoon / recap), `due_at`, `status` (scheduled / sent / suppressed / cancelled), `dedupe_key`, `sent_at` |
-| *(phase 4)* `focus_partners`, `focus_shares` | Opt-in sharing with the other parent | Partner must be an active owner/parent in the same household. Shares are pinned snapshots with selected fields; **reflection, notes and private labels are never copied** (Wave 8 A17). |
-
-### 4.3 Logic — a pure, tested module
-`src/focus.js`, with no DOM, imported by `logic.js` and the server function. It is ported from
-Daymark's tested domain code:
-- capacity summary (unknown estimate ≠ 0)
-- carry-forward of the last next step
-- one-tap result shape (a correction keeps minutes, note and time)
-- the day's phase (plan → in progress → check in → marked)
-- "showed up X of 7"
-- estimate-vs-actual calibration
-- nudge planning: two-step times, quiet hours, daily cap, wording rotation
-
-Tests go in `tools/focus.test.mjs`, added to `test:all` and the 12-date sweep. Port the matching
-Daymark tests (A02, A04–A06, A08, A12/A13 time-zone cases), not just the code.
-
-### 4.4 Nudges — the server surface
-- **Scheduler:** recommended is Supabase `pg_cron` + `pg_net`. Both are available on the project
-  but not enabled. Every minute they call a new `api/nudge.js`, which works on any Vercel plan.
-  Vercel Cron is the alternative, if the plan tier allows a per-minute schedule (check the
-  dashboard).
-- **`api/nudge.js`:**
-  - Loads due `focus_nudges` with the server key.
-  - Re-checks eligibility at send time: entry not done or removed, not in quiet hours, under the
-    cap, push subscription alive.
-  - Writes a `notifications` row with a new type (e.g. `focus_nudge`) and a dedupe key.
-  - Pushes through the same web-push code as `notify.js`, then marks the nudge sent.
-  - Retries are safe because of the dedupe key.
-- **Policy change needed (Marc's call):** a self-scheduled nudge is "you chose you". Adding
-  `focus_nudge` to the push list means updating the check constraint, both PUSH_TYPES lists and the
-  test that keeps them in sync.
-- **Lock-screen text:** generic and rotating ("10 minutes to your first step", "Start now — just
-  the first step"), never the item title unless that's switched on.
-
-### 4.5 Prerequisites before any private data goes server-side
-1. Run Sarno's 11 manual live-RLS tests (Outstanding #2), then the same style of test for every
-   `focus_*` table: a forged `user_id` must be rejected with `42501`, and a sitter must see nothing.
-2. Decide the push policy change (section 7).
-3. Choose the scheduler.
-
----
-
-## 5. Build phases (after the trial; order may change with its results)
-
-| Phase | Builds | Exit check |
-|---|---|---|
-| **0 — Trial** | Nothing. Two weeks with existing tools (section 6). | Trial log analysed; build order confirmed. |
-| **1 — My Day core** | `focus_days` / `entries` / `results` / `checkins` / `wins` + RLS; My Day on My Page: pick top 3 from reminders, mark the minimum, first step + if-then, one-tap results, evening recap with next step carried to tomorrow, done list. No push. | RLS tests pass (forged id rejected, sitter blind); `focus.test.mjs` + Sarno's full suite + sweep green; used for a week on a phone. |
-| **2 — Nudges** | `focus_nudges`, scheduler, `api/nudge.js`, push policy change; two-step nudges from time-based if-thens; one afternoon check-in; quiet hours; daily cap; rotating wording. | Five-case phone test like Sarno's notification check: app closed, force-quit, quiet hours, cap reached, item already done → no nudge. |
-| **3 — Time** | Countdown for the item in progress; buffer default; weekly calibration card ("you guessed 20, it took 45"). | Calibration numbers match a hand calculation on real data. |
-| **4 — Partner (optional)** | Spouse partner, opt-in; per-day share preview; suggestions become drafts; optionally a "working on it now — join?" ping (only if the trial's company experiment helped). | Share contains only selected fields; reflection never leaves; ending the partnership revokes access. |
-| **5 — Break it down with AI (optional)** | Smart Add-style proposal of a smaller first step; the user confirms. | Proposal-only (writes nothing); refuses others' items; cost-capped. |
-
-**Out of scope throughout:** streak counters, scores, stakes or money, group features, children's
-use, speech recognition (the iPhone keyboard already dictates).
-
-**What happens to Daymark:** it stays as the reference implementation and the trial tool. Its
-domain modules and tests (`src/domain/*`) are the source for `src/focus.js`. Polish waves 4–6 are
-cancelled unless the trial shows Daymark itself should be the product.
-
----
-
-## 6. The two-week trial (start here)
-
-**Goal:** learn which features matter before building any. One person, 14 days, about five
-minutes a day. It's a feasibility check, not proof.
-
-**Tools (no new code):**
-- **Daymark** at https://accountability-lilac.vercel.app, installed to the Home Screen. It already
-  does top-3 planning against available time, a "when will you start" cue, one-tap results,
-  estimate vs actual minutes, an evening check-in whose next step carries into tomorrow, and a
-  7-day review.
-  - Ignore its simulated partner.
-  - Data stays on the phone; export JSON from Settings at the end.
-  - Use the start-cue field for the if-then, and the first word of the title as the first step
-    ("Open draft → write section 2").
-- **iPhone Clock or Reminders** for nudges. Each morning, set two alarms per timed if-then (10 min
-  before, and at the time). Label them from a list of seven pre-written generic phrases, so the
-  wording rotates.
-- **One fixed afternoon alarm** (e.g. 3:00 pm): "Quick check — record or shrink".
-
-**Daily routine:**
-- **Morning (≤5 min):**
-  - Pick the top 3 and choose one as the minimum (note it in its title, e.g. "★").
-  - Write a first step and an if-then time for each.
-  - Estimate minutes.
-- **Afternoon alarm:** tap results so far; drop or shrink anything that won't happen.
-- **Evening:** check in.
-  - Record actual minutes.
-  - Write one next step.
-  - Answer three questions in the reflection:
-    1. Did a nudge help you start today? (yes / no / no nudge)
-    2. What stalled anything that stalled? (dread / forgot / no time / interrupted / other)
-    3. How did today feel? (1–5)
-
-**Optional company experiment:** on 3 or 4 days, work alongside someone (in person or on a call)
-for one block, and note it in the reflection.
-
-**Decision rules at day 14** (from the exported data):
-
-| If… | Then build first… |
-|---|---|
-| Nudges helped on most days they fired | Phase 2 (nudges) right after phase 1 |
-| Estimates were off by more than 50% on most items | Phase 3 (time) before phase 2 |
-| "Dread" was the main stall reason | The first-step prompt, then consider phase 5 |
-| Mornings were skipped on more than 4 days | Simplify capture/pick (fewer fields); push the morning nudge into phase 1 |
-| The minimum was done on most days but the top 3 rarely were | Make the minimum day the default view |
-| The company days went clearly better | Pull phase 4's "working on it now" ping forward |
-| Feel scores dropped over the two weeks | Cut friction and wording before adding features |
-
----
-
-## 7. Decisions needed from Marc
-
-1. **Users and partner:** just Marc, or both parents, each with their own My Day? Is the other
-   parent the (optional) partner?
-2. **Push policy:** may self-scheduled nudges reach the lock screen? This is the one deliberate
-   exception to Sarno's "someone chose you" rule. Should titles ever be shown?
-3. **AI break-down:** manual "2-minute version" prompt only, or the Smart Add-style AI proposal
-   later (phase 5)?
-4. **Trial tool:** Daymark plus phone alarms (recommended), or Sarno's reminders list plus paper?
 
 ---
 
@@ -758,6 +512,485 @@ inspected in screenshots only; **simulated** = demonstrated locally, real behavi
 4. Persistence across force-quit and a week of non-use; `storage.persist()` result when installed.
 5. Before promising reminders (Phase 4): push in tab/installed/denied/closed/backgrounded/Focus states,
    declarative `navigate` routing, badge, resubscribe after reinstall.
+
+---
+
+# Document: PWA_PREP
+
+# iPhone PWA build prep — consolidated research (2026-10-27)
+
+Three research passes (iOS platform, engineering stack, visual/art), merged and applied to the
+Wave 8 accountability-planner handoff. Items marked **[device]** need a real iPhone to confirm.
+Items marked **[unverified]** came from a single or secondary source.
+
+## 1. Platform facts that shape the product
+
+| Topic | Current state (iOS 26–27.2) | Consequence for Daymark |
+|---|---|---|
+| Install | iOS 26: Add to Home Screen opens as a web app by default, but users can switch "Open as Web App" off (→ plain Safari bookmark: no push, other storage); no `beforeinstallprompt` | Install-coach sheet says leave the toggle on; app detects non-standalone |
+| Standalone detection | `navigator.standalone` or `matchMedia('(display-mode: standalone)')`; also check `fullscreen` (WebKit 264218) | Feature-detect; never parse the frozen UA |
+| Push | Home Screen app only (16.4+); permission + `subscribe()` inside the tap handler; VAPID; 4 KB payload; TTL required; no silent push (permission revoked) | Reminders are server-sent; A24 states must cover "ordinary tab", "denied", "installed" |
+| Declarative Web Push | iOS 18.4+: `{"web_push":8030,"notification":{title, navigate, body}, "app_badge"}`; works without SW | Use as the payload format; SW `push` handler parses same JSON for other browsers |
+| Notification click | MDN data says unsupported (possibly stale); WebKit 252544: taps route to app root when closed; one `openWindow` only | Route with declarative `navigate`; treat SW `notificationclick` as best-effort |
+| `pushsubscriptionchange` | Not fired (WebKit 273063); subscriptions can silently die (OS updates) | Re-check `getSubscription()` every launch; server tracks last-delivered/last-seen; delete on 410; TTL must be >0, valid `Urgency` |
+| Background work | No Background Sync, Periodic Sync, Notification Triggers | Flush outbox on launch/`visibilitychange`/`online`; server scheduler for all reminders |
+| Storage | Same quota as Safari (up to ~60% disk/site); ITP 7-day rule: Home Screen apps have their own use counter (2020 statement) but eviction is still reported — not a guarantee; `storage.persist()` granted heuristically (more likely when installed) | IndexedDB as local truth, call `persist()`, surface quota errors (A27) |
+| Safari ↔ app | Separate storage; cookies copied once at install (17.2) | No magic links — use 6-digit email codes / passkeys **[device]** |
+| Manifest | Honors name, short_name, start_url, scope, display standalone, icons (SVG only via manifest), id; theme_color reportedly has no effect on the status bar since iOS 26. Ignores orientation, background_color, maskable/monochrome, shortcuts, share_target | Still ship full manifest for Android/desktop |
+| apple-touch-icon | Overrides manifest icons; must be opaque 180×180 | Generate opaque PNG |
+| Splash | Only via `apple-touch-startup-image` + `apple-mobile-web-app-capable`; per-device media queries; dark-mode splash fixed at install time (WebKit 259328); white flash on dark cold start (311569) | Generate plain light/dark solid splashes |
+| Status bar | Status-bar meta deprecated but still the only full-bleed path; colour not reliably refreshed after install **[unverified]**. WebKit 301994 (reopened, iOS 26.1→27): standalone status bar stays visible and `safe-area-inset-top` can read 0 | Layout must work with inset 0 or ~59px; device-test both |
+| iOS 27 top blur | System bar blurs content beneath it; a `position:fixed` element with a background, ≥90% wide and >10px tall at the top, makes the bar take its colour (community reading of WebKit `fixedContainerEdges`) **[unverified]**; theme-color/status meta don't help | Fixed `--bg` strip, height max(inset, 12px) |
+| Keyboard | No VirtualKeyboard API / interactive-widget | Use `visualViewport` to keep sheet actions visible |
+| Back swipe | Edge swipe works, no back button | In-app back affordances; coherent history |
+| Haptics | No Vibration API; real `<input type=checkbox switch>` tap gives a tick (switch shipped 17.4; haptic reported 17.4–18+); programmatic paths closed in 26.5 **[unverified]** | Use real switch inputs where a toggle fits (settings), not as fake buttons |
+| Modern CSS/JS | View Transitions (18.0/18.2), Popover (17), anchor positioning (26), scroll-driven animations (26), Navigation API (26.2), `light-dark()` (17.5), OKLCH (15.4) | Free to use with feature detection |
+| No glass API | `-apple-system-glass-material` is private | Approximate with backdrop-filter, chrome only |
+| EU | Home Screen apps kept (reversal 1 Mar 2024) | No special path |
+
+## 2. Engineering decisions
+
+| Layer | Research default | Phase 0 decision | Why |
+|---|---|---|---|
+| UI | React 19.3 + Vite 8 | **Same** | Fluency, ecosystem; ViewTransition stable in 19.3 |
+| Router | TanStack Router | **Tab state + URL hash** (Phase 0) | 5 top-level views and sheets; add router when deep links/push arrive |
+| CSS | Tailwind 4 | **Hand-written tokens + CSS** | Tokens are the design system; small surface |
+| Sheets | Base UI Drawer (Vaul unmaintained) | Hand-built sheet now; Base UI when swipe-dismiss is needed | Keep deps small |
+| Local data | Dexie + outbox | **Raw IndexedDB, whole-state per owner** | Phase 0 fictional model; Dexie + command outbox in Phase 2 |
+| Dates | date-fns-tz | **temporal-polyfill** | A12/A13 need exact `earlier`/gap semantics; Temporal has them natively |
+| SW | vite-plugin-pwa `injectManifest`, `registerType:'prompt'`, update on `visibilitychange` + hourly, `vite:preloadError` reload, no API caching in SW | **Same** | Push handlers need injectManifest |
+| Backend (Phase 1+) | Supabase (Postgres + RLS, OTP auth, Edge Functions, pg_cron) | Candidate; record ADR before real data | Matches handoff's PostgreSQL + worker + RLS contract; RLS bypass by owners/superusers must be tested (handoff) |
+| Push sender | `@pushforge/builder` (Web Crypto) over `web-push` | Phase 4 | Runs on edge runtimes |
+| Hosting | Cloudflare Workers Static Assets; no-cache on sw.js/index.html/manifest; immutable /assets | Phase 4 | Custom domain from day 1 (origin = installs, push, passkeys) |
+| TS | TS 7.0.2 incompatible with typescript-eslint | Using TS 7, no typescript-eslint | Biome/oxlint if linting needed |
+| Tests | Vitest 5 + Playwright (Chromium here; WebKit not installed in this container) | Domain tests for A02–A21 logic; screenshot review | Emulation ≠ iOS standalone |
+
+Performance budget: ≤170 KB gz JS first route, LCP ≤2.5 s, INP ≤200 ms, CLS ≤0.1.
+
+## 3. Visual direction for Daymark
+
+- **Identity:** "Paper and signal" — warm paper neutrals, deep ink, one amber signal colour. Brand
+  over iOS mimicry; borrow iOS *behaviour* (floating tab bar, sheets, large titles, 44pt targets,
+  safe areas, springs).
+- **Glass** only on the tab bar and sheet chrome; 1–3 glass surfaces/screen, blur ≤18px, never animated;
+  `prefers-contrast: more` → solid.
+- **Type:** `system-ui` (SF Pro) body; `ui-rounded` + tabular-nums for numbers; Dynamic Type via
+  `font: -apple-system-body` scoped to iOS; rem everywhere; nothing under 11pt.
+- **Colour:** OKLCH tokens, separate dark palette (elevated = lighter), increased-contrast overrides.
+  Outcomes use colour **and** shape: completed (teal, check), partial (half-filled, amber), missed
+  (neutral slate ring — never red), skipped (lavender, arrow), unreported (dashed outline).
+- **Handoff overrides habit-app conventions:** no streak flames, no opaque score, no punitive
+  streaks, no mascot. Celebrate *honest check-ins*, not perfect days; reward is a calm "day marked"
+  moment, reduced-motion aware.
+- **Icons:** Phosphor (MIT), regular for inactive, fill for active. SF Symbols are not licensed for web.
+- **Art:** geometric SVG from brand primitives (sun-on-horizon mark, horizon lines) for icon,
+  empty states and install guide.
+- **Assets:** 1024 master SVG → apple-touch-icon 180 (opaque), 192/512 any, 512 maskable (80% safe),
+  favicon.svg, light/dark solid splashes. Rasterize with Playwright/sharp; container has no rsvg.
+- **Self-review loop:** Playwright at 393×852 / 402×874 / 440×956 / 375×667 / 320 wide / desktop,
+  light+dark, simulated safe areas (`--debug-sat:59px; --debug-sab:34px`); read PNGs and critique.
+  Container renders `system-ui` as a non-SF font — typography is approximate.
+
+## 4. Device test checklist (needs the user's iPhone)
+1. Install via Safari (… → Share → Add to Home Screen, Open as Web App on). Splash, icon, status bar, top blur.
+2. Safe areas, tab bar above home indicator, keyboard with sheets.
+3. Push: ordinary tab state, permission prompt from tap, denied; delivery and tap routing with app closed / backgrounded / foreground; after force-quit; under Focus & Notification Summary; badge; delete icon → reinstall → resubscribe.
+6. `env(safe-area-inset-top)` value in standalone (0 vs ~59px, WebKit 301994) and whether the top strip stops the iOS 27 blur.
+4. Kill app, relaunch: data persists; update prompt on new deploy.
+5. Dark mode cold start (white flash), reduce transparency, Dynamic Type at largest size, VoiceOver.
+
+## 5. Critic pass and verification (2026-10-27)
+
+Two Sonnet critics reviewed sections 1–4. I verified only the load-bearing flagged items directly:
+- **WebKit 301994** — confirmed: title is "Status bar remains visible in fullscreen mode in Home Screen Web apps"; no mention of black-translucent; reopened 2026-08-04 (26.5.2, 27 beta); reporter saw `safe-area-inset-top` = 0. Row rewritten.
+- **WebKit 301108** — confirmed: Safari browser (see-through address bar) bug, not standalone; no workaround. Row and CSS recipe removed.
+- **Top-blur thresholds** — confirmed: milkbox PR #55 cited 6px/80% (Modern Web Weekly), revised in PR #60 to ≥90% width, >10px, from reading WebKit source. Strip updated.
+Accepted without re-checking (low risk, adopted as caveats): notificationclick reliability, subscription death, TTL/Urgency, ITP caveat, haptics 17.4, Open-as-Web-App toggle, theme-color.
+
+---
+
+# Document: POLISH_PLAN
+
+# Polish pass — review and plan (2026-10-27)
+
+Review of the Phase 0 prototype as deployed, from reading all of `src/` and rendering every screen
+(402×874 and 320×568, light and dark, plus desktop). The polish pass stays inside Phase 0: no backend,
+same domain rules, simulations still labelled.
+
+## What is strong — keep it
+- **Domain model.** Commands with keys/hashes, revisions instead of overwrites, occurrence identity,
+  frozen zones, pinned share snapshots. Framework-free and unit-tested (27 tests).
+- **Privacy rules are real code**, not copy: `buildPreview` is the only path to a snapshot, and the
+  preview digest is checked at publish.
+- **Design system.** OKLCH tokens with light/dark/increased-contrast, colour+shape outcome marks, a
+  calm miss colour, 17px Dynamic Type root, 44px targets, safe areas, `inert` sheets.
+- **Honest tone.** No streaks or scores; "Day marked" is the only celebration.
+
+## Status
+- **Paused 2026-10-28** after waves 1–3. Waves 4–6 are on hold; see `docs/COMBINED_PLAN.md`.
+- **Waves 1–3 done (2026-10-27).** All bugs below fixed except B7, which turned out not to be a bug:
+  occurrences are only ever added there, so comparing counts is correct.
+- **Found and fixed during wave 3: B8.** A result could be lost if the app closed right after it was
+  recorded. The save ran in a React effect after the screen updated, so "Saved" showed before the
+  IndexedDB write had started. Every change now goes through the store's `commit()`, which starts the
+  write in the same step over one shared, explicitly committed connection. The e2e reload step caught
+  it.
+- Tests: 39 unit (12 new). The e2e test now covers focus across clock ticks, the discard guard,
+  quick results (online and offline), recording inside the check-in, and carry-forward. The focus step
+  fails if the B1 fix is reverted.
+
+## Bugs (confirmed)
+| # | Bug | Where | Effect |
+|---|---|---|---|
+| B1 | Any open sheet steals focus every 30 s on the real clock. The store ticks, the parent re-renders, `onClose` gets a new identity, and the `Sheet` effect re-runs `ref.focus()`. Reproduced in Chromium: focus moved from the input to `div.sheet` after 31 s. | `ui/kit.tsx` `Sheet` | On iPhone the keyboard drops mid-sentence while writing a check-in. |
+| B2 | The week's experiment only shows while `weekEnd === today`. | `screens/Review.tsx:15` | The chosen experiment disappears the next day and is never shown on Today. |
+| B3 | Theme buttons read `document.documentElement.dataset.theme` during render, but nothing re-renders Settings after a click. | `screens/Settings.tsx` | The pressed state can show the wrong theme. |
+| B4 | `Row` components are declared inside the render functions, so every render remounts them. | `Today.tsx` PlanBuilder, `Inbox.tsx` | Ticking a checkbox loses keyboard/VoiceOver focus; extra DOM churn. |
+| B5 | Viewing a day with no plan runs `SetDraft`. | `Today.tsx` PlanBuilder effect | Browsing the week creates plan records and command-log entries; offline, they show up as "saved on this device". |
+| B6 | The simulated reply targets the latest check-in across all agreements. | `Partner.tsx` ReplySheet | Can reply to a day from a former partner's agreement (simulation only). |
+| B7 | `withOccurrences` only replaces occurrences when the count changes. | `app/store.tsx` | Changed occurrences with the same count can go stale. |
+
+## Weaknesses by area
+1. **The loop does not close.** The product promise ends in "a practical next attempt", but
+   yesterday's *Next step* appears only on yesterday, the week's experiment appears only in Review
+   (and vanishes, B2), and an accepted partner suggestion drops silently into Inbox. Planning today
+   never shows any of them.
+2. **Logging is slow.** Every result means opening a full sheet, choosing an outcome and tapping
+   *Save* in the top corner. The check-in sheet lists unreported items but cannot record them, so
+   the user has to back out, record each one and come back.
+3. **Spec language in the UI.** Examples: "starts no reply window", "source revision 3",
+   "agreement v1", "Committing saves a snapshot. Later changes become revisions", and many
+   footnotes per screen. Correct but heavy; the rules should be felt, and explained on demand.
+4. **Today's hierarchy.**
+   - Week-strip marks (conic fills, inner rings, hatching) have no legend and read as decoration.
+   - The main action is not time-aware: in the evening, the *Check in* card is below the fold.
+   - Button rows wrap unevenly. On the SE, the section-title metadata wraps under the title.
+5. **Plan builder.** The available-time chips and a raw number field wrap onto a second line. You
+   can't capture inline while planning. The overload acknowledgement is a long checkbox sentence.
+6. **Sheets are inconsistent.**
+   - Save is in the header on some sheets and is a bottom button on others.
+   - Closing via the backdrop or Esc discards edits with no warning.
+   - The grabber looks draggable but isn't.
+   - The share sheet's confirm button is far below the preview.
+7. **Settings is one long page.** Real settings, simulated account info and prototype controls (clock,
+   offline, reset) sit together. The time zone is free text.
+8. **Desktop is a stretched phone layout.** One 920px column, a week strip with huge gaps, and an
+   empty right side on Today and Review.
+9. **Visual rough spots.**
+   - Empty-state art is clumsy (the sun overlaps the horizon lines; the inbox icon floats).
+   - Native orange checkboxes.
+   - In dark mode *Block* (danger) and primary buttons are both orange.
+   - Recording a result gets no feedback beyond a toast.
+10. **Onboarding.** No name; no install nudge for Safari-tab users on iPhone (reminders need the
+    Home Screen app); no guided first action — the empty day just says "Nothing to plan yet".
+11. **Code that will slow polishing down.**
+    - Heavy inline `style={{…}}` throughout the screens, which makes consistent spacing and theming hard.
+    - Full-page screenshots show the fixed tab bar mid-page.
+    - The e2e test covers one path only.
+
+## Plan — in order
+Each wave ends with `npm test && npm run build && npm run e2e && npm run shots` and a look at the
+PNGs (CLAUDE.md), then a push for a preview deploy.
+
+**Wave 1 — Fix bugs (B1–B7).** Store `onClose` in a ref inside `Sheet` so the effect runs once.
+Keep an experiment for its 7-day window. Hold theme in React state. Hoist row components. Create a
+draft only when the user first changes something. Scope the reply to the active agreement. Compare
+occurrence keys, not counts. Add unit tests where the domain is touched.
+
+**Wave 2 — Close the loop.** On Today while planning, add a *Carry forward* card:
+- yesterday's next step, with one tap to turn it into a draft action;
+- this week's experiment as a reminder line;
+- an accepted partner suggestion, marked as such.
+
+After a private check-in, offer to plan tomorrow from the next step. Domain changes get A-number
+tests (A08, A18).
+
+**Wave 3 — Faster logging.**
+- Tapping an item's outcome mark on Today opens a compact four-choice picker that records directly;
+  details stay in the full sheet.
+- The check-in sheet records unreported items inline.
+- Sheets get one consistent action placement (sticky bottom primary button) and an "unsaved changes"
+  guard on close.
+
+**Wave 4 — Copy and disclosure.** Rewrite UI strings in plain language and move rule explanations
+into one small "How this works" disclosure per screen. Keep internal identifiers (revision numbers,
+agreement versions) out of the main UI; show them in history/details. Keep every simulation label.
+
+**Wave 5 — Today and visual polish.**
+- Time-aware top card: Plan → In progress → Check in → Day marked.
+- Simpler week marks with a legend.
+- Available-time stepper instead of the chips plus raw field.
+- Redrawn empty-state art, styled checkboxes, a distinct danger tone in dark mode, and a small
+  confirmation motion when a result is saved (respecting reduced motion).
+- Move inline styles into classes.
+- Run `npm run contrast` after any token change.
+
+**Wave 6 — Desktop and Settings.**
+- Two-column Today and Review at ≥960px.
+- Settings split into Reminders, Time away, Appearance and Your data.
+- Account and prototype controls move into a labelled *Prototype* sheet.
+- Time-zone picker instead of free text.
+
+**Wave 7 — Onboarding and iPhone feel.** Ask for a name. Show an install nudge when in a Safari tab.
+Guide the first action straight into planning. Swipe-down to close sheets. Show the update prompt
+above the tab bar consistently.
+
+**Wave 8 — Verification.**
+- Extend e2e to quick logging, carry-forward and the unsaved-changes guard.
+- Fix full-page screenshots (hide the fixed bar).
+- Run the device checklist in `PWA_PREP.md` §4 on a real iPhone from the production URL.
+
+Out of scope: backend/sign-in (Phase 1), real push (Phase 4), new product features beyond the handoff.
+
+---
+
+# Document: COMBINED_PLAN
+
+# Combined plan: accountability + ADHD-friendly planning, for the Sarno Family App (2026-10-28)
+
+**Status: planning only.** Daymark app development is paused (polish waves 4–6 not started).
+This merges two research lines:
+
+- **Accountability:** `docs/Wave8_Handoff.md` (spec, A01–A32) and the Daymark prototype built from it.
+- **ADHD planning:** the 2026-10-28 hand-off (six ideas, feature list, two-week trial).
+
+The result is to be built later into the **Sarno Family App** (`Marcsarno/Sarno`, `SarnoPWA/`;
+Supabase project "Sarno Family Hub"). Everything about Sarno below was read from its repo
+(`61f944c`) and its live schema on 2026-10-28; nothing was changed there.
+
+---
+
+## 1. What it is
+
+A private daily loop inside Sarno for the parents (owner/parent roles):
+
+1. **Capture**, messy, in one tap.
+2. **Pick today's top 3**, with one marked as the *minimum*.
+3. **Plan each one's start** as a tiny first step plus an if-then: "If it's 9:00, then I open the draft."
+4. **Get nudged** at that moment.
+5. **See time passing.**
+6. **Record what happened** in one tap.
+7. **Close the day** with a short recap and one next step for tomorrow.
+8. **Optionally share** selected parts with the other parent, who can suggest but never decide.
+
+The promise stays the one from Wave 8: *a manageable commitment, an honest result, a practical
+next attempt*. Missed days are expected, not punished.
+
+**Who for:** the person typing, and optionally their spouse as partner. Sarno already limits
+personal to-dos to owner/parent at the database level, so sitters and children are out of scope
+by construction. Nothing here promises better outcomes. It is a tool to try, and the trial
+(section 6) decides what gets built.
+
+---
+
+## 2. The evidence, checked
+
+Each of the hand-off's six ideas, rated after reading the cited sources on 2026-10-28.
+
+| Idea | What the source actually is | Strength | Consequence for the plan |
+|---|---|---|---|
+| 1. One trusted place: one calendar + one task list, checked daily | Safren's CBT program for adult ADHD ("Mastering Your Adult ADHD"). Sprich et al. 2012 is a *clinical overview*: calendar + task list are "the foundation for subsequent skills", reviewed at least daily. Tested as a whole program **with medication** (small RCT: CBT n=16 vs n=15; CHADD also cites a 2010 JAMA trial). The component alone was never isolated. | Moderate (as part of a program) | Build on Sarno's existing calendar + personal reminders; never add a second list. Daily review is the core habit. |
+| 2. Two-step nudges, varied wording, daily cap | Safren's program uses "cue alarms" and timers. The two-step pattern, wording rotation and cap are **design inferences**, not tested findings. | Weak / inferred | Build only if the trial shows nudges help; keep the cap and rotation adjustable. |
+| 3. Make time visible (timers, buffers, guessed vs actual) | Safren: measure your attention span and split tasks into chunks that fit it (e.g. 15 min). Guessed-vs-actual feedback is an inference. | Weak–moderate | Daymark already records estimate + actual minutes, so calibration feedback is cheap. |
+| 4. Shrink the first step | Safren: break long tasks into smaller chunks; an optional procrastination module. "Built-up dread" is practitioner framing. | Moderate (as part of a program) | Explicit *first step* field; the evening recap's "next step" asks for the smallest version. |
+| 5. If-then plans | Gawrilow, Gollwitzer & Oettingen 2011 (*Cogn Ther Res* 35:442): children with ADHD (inpatient n=45, mean age 10.7; outpatient n=47, mean age 10.3) waited longer in a **computerised delay-of-gratification task** after forming if-then plans; goal intentions alone did not help them. A lab task in children, not "pack tomorrow's bag" — that example is illustrative. Adult transfer is an assumption, though implementation intentions are well studied in adults generally. | Moderate for the mechanism, weak for this use | Upgrade Daymark's start cue into a real if-then; a time-based "if" is what the nudge fires on. |
+| 6. Company and kindness | Body doubling: Healthline itself says research is "scant"; the main study (Eagle et al. 2024) is about experiences. Kindness: Safren's cognitive restructuring; "don't expect gains to be linear". ADDitude (Gretchen Rubin) is anecdotal and only supports the "ta-da" done list. | Weak | Partner stays optional and suggest-only; "work alongside" is a trial experiment, not a build item. Kindness is a design rule everywhere (no red for misses, no streak resets). |
+
+**Bottom line:** the strongest support is for a structured routine (one list, daily review,
+chunking, if-then) taught as a program. Most app-specific mechanics are reasonable inferences.
+That is why a cheap trial comes before any build.
+
+---
+
+## 3. How the two research lines fit together
+
+Most of the ADHD ideas are already Daymark mechanisms under another name. Where they conflict,
+this is the resolution:
+
+| Topic | Accountability (Wave 8 / Daymark) | ADHD hand-off | Combined decision |
+|---|---|---|---|
+| Daily size | "Suggest one to three commitments" | Top 3 each morning | Same. Top 3, soft limit (more allowed, with the capacity warning). |
+| Minimum vs ideal | — | Minimum day next to the ideal day | **New:** mark one item as the minimum. A day counts as "showed up" when the minimum is done or partial. |
+| Capture | Title + observable criterion + estimate | Near-effortless, messy is fine | Capture is text only (Sarno's reminder row or Smart Add). Criterion, first step and estimate are asked **only when an item is picked for today**, and are optional. |
+| Starting | Optional start cue ("When or after what will you start?") | If-then plans; tiny first step | The start cue becomes **If [time or event] → then [first step]**. A time "if" schedules a nudge. |
+| Reminders | Bounded notices, quiet hours, generic text, dedupe | Two-step nudges, varied wording, daily cap | Combine: two steps (get ready, start now), rotating generic wording, quiet hours, a daily cap, no titles on the lock screen by default. |
+| Time | Capacity bar: estimates vs available minutes | Countdown, buffers, guessed vs actual | Keep capacity; add a buffer default and a countdown; weekly "you guessed 20, it took 45" calibration from estimate vs actual. |
+| Results | Completed / partial / missed / skipped / not reported; corrections kept | Done list that shows wins | Keep honest outcomes. **Add a wins log** for unplanned things done: it shows on the done list but never changes the planned-item counts. |
+| Streaks | None; "no punitive streak system" | Streaks that survive a skip | **No streak counter.** Show "showed up 5 of the last 7 days". It survives a skip by design and never resets to zero. |
+| Missed days | Unreported ≠ missed; time away; restart without backlog (A26) | Expect missed days; avoid shame spirals | Same principle; already built in Daymark. |
+| Evening | Private check-in; next step carried to the next day | Evening recap of what got done | Same, plus a short done list at the top of the recap. |
+| Afternoon | — | One gentle afternoon check-in | **New:** one optional afternoon nudge to record quick results or shrink the plan. |
+| Partner | One accepted peer; invite by email; previews; reply windows; block/report | Opt-in partner check-ins that suggest, not decide | Partner is **the other parent, already in the household**. Keep: opt-in, per-day share preview, suggestions become drafts only. Drop for v1: email invites, reply-window deadlines, block/report/moderation (household trust). |
+| Breaking down | "Shrink one finish line" suggestion | "Break it down" button | Manual first: "What's the 2-minute version?" An AI proposal via Smart Add's propose-then-confirm pattern only if the trial shows the manual prompt gets used and still stalls. |
+| AI | Excluded from first release | — | Sarno already uses Claude (Sonnet) for Smart Add, propose-only. Any AI here follows that rule: proposes, never writes. |
+| Calendar | Calendar ingestion deferred | One trusted place incl. calendar | Sarno *is* the family calendar. Today's view shows that day's family events beside the top 3, so planning happens against real commitments. |
+
+---
+
+## 4. Fitting it into Sarno
+
+Facts that constrain the design (from `SarnoPWA/CLAUDE.md`, migrations 0001–0007 and the live
+schema):
+
+- **UI is generated.** `src/AppView.jsx` is generated from `tools/proto/markup.html`; logic lives in
+  the `AppLogic` class in `src/logic.js`; `tools/verify.py`, `test:empty`, `test:privacy` and
+  `smoke` must stay green.
+  Daymark's React screens therefore cannot be dropped in. Its **rules** can be ported as a pure
+  module, the way `src/smartadd.js` is shared by the client and `api/smart-add.js`.
+- **`personal_todos` is the one properly private table**: `user_id = auth.uid()` plus active
+  owner/parent membership, enforced by RLS. Columns: `text` (≤500), `due` (date only), `priority`,
+  `done`, `completed_at`. It is the natural capture inbox.
+- **Push policy:** only `event_invite`, `direct_message` and `supply_request` push ("somebody
+  deliberately chose you"); `reminder_due` exists but is in-app only. Notifications are created
+  only by the server (no browser insert grant), deduplicated by `(recipient_id, dedupe_key)`.
+  Lock-screen text is kept generic.
+- **No scheduler exists.** No Supabase Edge Functions; push is sent by the Vercel function
+  `api/notify.js` when something happens. Sarno's own deferred-features note says push reminders
+  need "a small server-side surface that holds secrets and can act while the app is closed. Build it once."
+- **Open blocker in Sarno:** the 11 manual live-RLS tests have never been run.
+
+### 4.1 Where it lives in the app
+A **My Day** section at the top of My Page, where personal reminders already live. Reminders stay
+the inbox; My Day is the plan. The "+" menu and Smart Add keep working for capture.
+
+### 4.2 Data — proposed tables (not a migration yet)
+Every table is private and follows the `personal_todos` pattern:
+- `user_id default auth.uid()`
+- `household_id`
+- RLS `user_id = auth.uid() AND is_household_manager(household_id)`
+- no views or definer functions that bypass RLS
+
+Nothing private goes into `family_data`, which every household member can read.
+
+| Table | Purpose | Key columns |
+|---|---|---|
+| `focus_days` | One row per person per local date | `date`, `zone` (frozen at first commit), `available_min`, unique `(user_id, date)` |
+| `focus_entries` | The day's picks, snapshotted when committed | `day_id`, `todo_id` (nullable), `title`, `first_step`, `if_cue`, `cue_at` (timestamptz, nullable), `estimate_min`, `is_minimum`, `position`, `added_at`, `removed_at` — original vs revised plan is derivable from these timestamps instead of full revisions |
+| `focus_results` | Append-only outcomes | `entry_id`, `outcome` (completed / partial / missed / skipped), `actual_min`, `performed_at`, `recorded_at`, `corrects` |
+| `focus_checkins` | Append-only evening recaps | `day_id`, `rev`, `reflection` (private), `next_step` |
+| `focus_wins` | Unplanned things done | `date`, `text` |
+| `focus_nudges` | Scheduled nudges | `entry_id` / `day_id`, `kind` (get_ready / start_now / afternoon / recap), `due_at`, `status` (scheduled / sent / suppressed / cancelled), `dedupe_key`, `sent_at` |
+| *(phase 4)* `focus_partners`, `focus_shares` | Opt-in sharing with the other parent | Partner must be an active owner/parent in the same household. Shares are pinned snapshots with selected fields; **reflection, notes and private labels are never copied** (Wave 8 A17). |
+
+### 4.3 Logic — a pure, tested module
+`src/focus.js`, with no DOM, imported by `logic.js` and the server function. It is ported from
+Daymark's tested domain code:
+- capacity summary (unknown estimate ≠ 0)
+- carry-forward of the last next step
+- one-tap result shape (a correction keeps minutes, note and time)
+- the day's phase (plan → in progress → check in → marked)
+- "showed up X of 7"
+- estimate-vs-actual calibration
+- nudge planning: two-step times, quiet hours, daily cap, wording rotation
+
+Tests go in `tools/focus.test.mjs`, added to `test:all` and the 12-date sweep. Port the matching
+Daymark tests (A02, A04–A06, A08, A12/A13 time-zone cases), not just the code.
+
+### 4.4 Nudges — the server surface
+- **Scheduler:** recommended is Supabase `pg_cron` + `pg_net`. Both are available on the project
+  but not enabled. Every minute they call a new `api/nudge.js`, which works on any Vercel plan.
+  Vercel Cron is the alternative, if the plan tier allows a per-minute schedule (check the
+  dashboard).
+- **`api/nudge.js`:**
+  - Loads due `focus_nudges` with the server key.
+  - Re-checks eligibility at send time: entry not done or removed, not in quiet hours, under the
+    cap, push subscription alive.
+  - Writes a `notifications` row with a new type (e.g. `focus_nudge`) and a dedupe key.
+  - Pushes through the same web-push code as `notify.js`, then marks the nudge sent.
+  - Retries are safe because of the dedupe key.
+- **Policy change needed (Marc's call):** a self-scheduled nudge is "you chose you". Adding
+  `focus_nudge` to the push list means updating the check constraint, both PUSH_TYPES lists and the
+  test that keeps them in sync.
+- **Lock-screen text:** generic and rotating ("10 minutes to your first step", "Start now — just
+  the first step"), never the item title unless that's switched on.
+
+### 4.5 Prerequisites before any private data goes server-side
+1. Run Sarno's 11 manual live-RLS tests (Outstanding #2), then the same style of test for every
+   `focus_*` table: a forged `user_id` must be rejected with `42501`, and a sitter must see nothing.
+2. Decide the push policy change (section 7).
+3. Choose the scheduler.
+
+---
+
+## 5. Build phases (after the trial; order may change with its results)
+
+| Phase | Builds | Exit check |
+|---|---|---|
+| **0 — Trial** | Nothing. Two weeks with existing tools (section 6). | Trial log analysed; build order confirmed. |
+| **1 — My Day core** | `focus_days` / `entries` / `results` / `checkins` / `wins` + RLS; My Day on My Page: pick top 3 from reminders, mark the minimum, first step + if-then, one-tap results, evening recap with next step carried to tomorrow, done list. No push. | RLS tests pass (forged id rejected, sitter blind); `focus.test.mjs` + Sarno's full suite + sweep green; used for a week on a phone. |
+| **2 — Nudges** | `focus_nudges`, scheduler, `api/nudge.js`, push policy change; two-step nudges from time-based if-thens; one afternoon check-in; quiet hours; daily cap; rotating wording. | Five-case phone test like Sarno's notification check: app closed, force-quit, quiet hours, cap reached, item already done → no nudge. |
+| **3 — Time** | Countdown for the item in progress; buffer default; weekly calibration card ("you guessed 20, it took 45"). | Calibration numbers match a hand calculation on real data. |
+| **4 — Partner (optional)** | Spouse partner, opt-in; per-day share preview; suggestions become drafts; optionally a "working on it now — join?" ping (only if the trial's company experiment helped). | Share contains only selected fields; reflection never leaves; ending the partnership revokes access. |
+| **5 — Break it down with AI (optional)** | Smart Add-style proposal of a smaller first step; the user confirms. | Proposal-only (writes nothing); refuses others' items; cost-capped. |
+
+**Out of scope throughout:** streak counters, scores, stakes or money, group features, children's
+use, speech recognition (the iPhone keyboard already dictates).
+
+**What happens to Daymark:** it stays as the reference implementation and the trial tool. Its
+domain modules and tests (`src/domain/*`) are the source for `src/focus.js`. Polish waves 4–6 are
+cancelled unless the trial shows Daymark itself should be the product.
+
+---
+
+## 6. The two-week trial (start here)
+
+**Goal:** learn which features matter before building any. One person, 14 days, about five
+minutes a day. It's a feasibility check, not proof.
+
+**Tools (no new code):**
+- **Daymark** at https://accountability-lilac.vercel.app, installed to the Home Screen. It already
+  does top-3 planning against available time, a "when will you start" cue, one-tap results,
+  estimate vs actual minutes, an evening check-in whose next step carries into tomorrow, and a
+  7-day review.
+  - Ignore its simulated partner.
+  - Data stays on the phone; export JSON from Settings at the end.
+  - Use the start-cue field for the if-then, and the first word of the title as the first step
+    ("Open draft → write section 2").
+- **iPhone Clock or Reminders** for nudges. Each morning, set two alarms per timed if-then (10 min
+  before, and at the time). Label them from a list of seven pre-written generic phrases, so the
+  wording rotates.
+- **One fixed afternoon alarm** (e.g. 3:00 pm): "Quick check — record or shrink".
+
+**Daily routine:**
+- **Morning (≤5 min):**
+  - Pick the top 3 and choose one as the minimum (note it in its title, e.g. "★").
+  - Write a first step and an if-then time for each.
+  - Estimate minutes.
+- **Afternoon alarm:** tap results so far; drop or shrink anything that won't happen.
+- **Evening:** check in.
+  - Record actual minutes.
+  - Write one next step.
+  - Answer three questions in the reflection:
+    1. Did a nudge help you start today? (yes / no / no nudge)
+    2. What stalled anything that stalled? (dread / forgot / no time / interrupted / other)
+    3. How did today feel? (1–5)
+
+**Optional company experiment:** on 3 or 4 days, work alongside someone (in person or on a call)
+for one block, and note it in the reflection.
+
+**Decision rules at day 14** (from the exported data):
+
+| If… | Then build first… |
+|---|---|
+| Nudges helped on most days they fired | Phase 2 (nudges) right after phase 1 |
+| Estimates were off by more than 50% on most items | Phase 3 (time) before phase 2 |
+| "Dread" was the main stall reason | The first-step prompt, then consider phase 5 |
+| Mornings were skipped on more than 4 days | Simplify capture/pick (fewer fields); push the morning nudge into phase 1 |
+| The minimum was done on most days but the top 3 rarely were | Make the minimum day the default view |
+| The company days went clearly better | Pull phase 4's "working on it now" ping forward |
+| Feel scores dropped over the two weeks | Cut friction and wording before adding features |
+
+---
+
+## 7. Decisions needed from Marc
+
+1. **Users and partner:** just Marc, or both parents, each with their own My Day? Is the other
+   parent the (optional) partner?
+2. **Push policy:** may self-scheduled nudges reach the lock screen? This is the one deliberate
+   exception to Sarno's "someone chose you" rule. Should titles ever be shown?
+3. **AI break-down:** manual "2-minute version" prompt only, or the Smart Add-style AI proposal
+   later (phase 5)?
+4. **Trial tool:** Daymark plus phone alarms (recommended), or Sarno's reminders list plus paper?
 
 ---
 
